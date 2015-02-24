@@ -2,13 +2,12 @@
   "name": "dna",
   "version": "1.0.0",
   "description": "DNA",
-  "main": "index.ls",
+  "main": "./index.ls",
   "scripts": {
-    "test": "./test"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:11111000000/dna.git"
+    "url": "http://github.com/11111000000/dna"
   },
   "keywords": [
     "dna",
@@ -19,7 +18,7 @@
   "bugs": {
     "url": "https://github.com/11111000000/dna/issues"
   },
-  "homepage": "https://github.com/11111000000/dna"
+  "homepage": "https://github.com/11111000000/dna",
   "dependencies": {
     "clone": "^0.1.18",
     "prelude-ls": "^1.1.1"
