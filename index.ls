@@ -4,3 +4,4 @@ module.exports =
   dna-attrs: require \./dna-attrs
   dna-scope: require \./dna-scope
   dna-ctrl:  require \./dna-ctrl
+  dna-observed: require \./dna-observed

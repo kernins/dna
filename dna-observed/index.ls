@@ -1,7 +1,7 @@
 { each, keys, Obj } = require \prelude-ls
 
 observed = (obj) ->
-  if obj.has-own-property \__is-observed
+  if obj.has-own-property \__isObserved
     obj
   else
     obj.__is-observed = yes

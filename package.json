@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "DNA",
   "main": "./index.ls",
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "http://github.com/11111000000/dna"
@@ -20,7 +19,10 @@
   },
   "homepage": "https://github.com/11111000000/dna",
   "dependencies": {
+    "LiveScript": "^1.3.1",
     "clone": "^0.1.18",
-    "prelude-ls": "^1.1.1"
+    "livescript-loader": "^0.1.3",
+    "prelude-ls": "^1.1.1",
+    "webpack": "^1.6.0"
   }
 }
