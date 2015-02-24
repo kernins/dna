@@ -18,6 +18,5 @@ module.exports = class
 
   log: (...vars) ->
     vars.unshift "[#{@element.tag-name}]"
-    console?.log?.apply console, vars
     window.dna-log?.apply @, vars
     
