@@ -8,6 +8,21 @@ objs-list = ($expr) ->
      it |> (Str.split \.) |> initial |> Str.join \.
   objs |> unique
 
+clean-element = (element) ->
+  if element?.tag-name
+    while element.first-child
+      element.remove-child element.first-child
+
+render-fn = ($element, $scope, $template = '') ->
+  clean-element $element
+
+  $element.innerHTML = do ~>
+       | typeof! $template is \String   => $template
+       | typeof! $template is \Function => $scope |> $template
+       | _                              => ''
+
+  $element.emit \rendered
+
 module.exports = 
 
   \dna-click : ($element,$scope,$expr) ->
@@ -17,6 +32,11 @@ module.exports =
   \dna-hover : ($element,$scope,$expr) ->
     $element.on \hover, ->
       $scope.$eval $expr
+
+  \dna-select-fn : ($element, $scope, $expr) ->  #TODO think more about *-fn and parameters
+    $element.on 'select', ->
+      if typeof! (fn = $scope.$eval $expr) is \Function
+        fn ...
 
   \dna-text : ($element, $scope, $expr) ->
     set = -> $element.inner-text = $scope.$eval $expr
@@ -62,7 +82,6 @@ module.exports =
             (parent |> observed)
               .on "update #svar", -> set-value it
             
-
     else      
       throw "[dna-bind] Invalid model: #{$expr}"
       
@@ -90,3 +109,53 @@ module.exports =
       (it |> $scope.$eval |> observed)
         .on \update, ->
           set!
+          
+  \dna-template : ($element, $scope, $expr) ->
+    console.log \dna-template
+    if $template = $scope.$eval $expr
+      $element.template = $template
+      $element.render = (template = $element.template) ->
+                             render-fn $element, $scope, $template
+      set-timeout ->
+        $element.render!
+      , 50 # TODO test it with controller
+
+  \dna-controller : ($element, $scope, $expr) ->
+    console.log \dna-controller
+    if Ctrl = ($scope.$eval $expr)
+      set-timeout ~>
+        $element.controller = new Ctrl $element $scope
+      , 50 # TODO test to all-attrs initialized before this
+      
+  \dna-render-on-splice : ($element, $scope, $expr) ->
+    console.log \dna-render-on-splice
+    if /^this\.?([a-z0-9_\.]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
+      [path, svar] = [that.1, that.2]
+      parent =
+          | path => $scope.$eval "this.#path"
+          | _ => $scope
+      
+      if typeof! (array = $scope.$eval $expr) is \Array
+        (parent |> observed)
+          .on "splice #{svar}", -> $element.render?!
+      else
+        throw "[dna-render-on-splice] Not an Array: #{$expr}"
+    else
+      throw "[dna-render-on-splice] Invalid model: #{$expr}"
+      
+  \dna-render-on-update : ($element, $scope, $expr) ->
+    console.log \dna-render-on-update
+    if /^this\.?([a-z0-9_\.]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
+      [path, svar] = [that.1, that.2]
+      parent =
+          | path => $scope.$eval "this.#path"
+          | _ => $scope
+      
+      if typeof! (array = $scope.$eval $expr) in <[String Number Boolean]>
+        (parent |> observed)
+          .on "update #{svar}", -> $element.render?!
+      else
+        throw "[dna-render-on-update] Not an simple variable: #{$expr}"
+    else
+      throw "[dna-render-on-update] Invalid model: #{$expr}"
+      

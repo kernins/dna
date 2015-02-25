@@ -14,15 +14,15 @@ clean-element = (element) ->
     while element.first-child
       element.remove-child element.first-child
 
-render-fn = (element, scope, template = '') ->
-  clean-element element
+render-fn = ($element, $scope, $template = '') ->
+  clean-element $element
 
-  element.innerHTML = do ~>
-       | typeof! template is \String   => template
-       | typeof! template is \Function => scope |> template
-       | _                             => ''
+  $element.innerHTML = do ~>
+       | typeof! $template is \String   => $template
+       | typeof! $template is \Function => $scope |> $template
+       | _                              => ''
 
-  element.emit \rendered
+  $element.emit \rendered
 
 create-tag = ( tag-name, props = {} ) ->
 
