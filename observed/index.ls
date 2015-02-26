@@ -18,7 +18,7 @@ observed = (obj) ->
           Object.observe obj[key], ~>
             it |> each (ev) ->
               if ev.name is \length
-                @ ->
+                set-timeout ->
                   obj.emit "splice #{key}", obj[key], ev
                 , 1
 
