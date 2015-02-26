@@ -1,7 +1,8 @@
 
 module.exports =
-  dna-tag:   require \./dna-tag
-  dna-attrs: require \./dna-attrs
-  dna-scope: require \./dna-scope
-  dna-ctrl:  require \./dna-ctrl
-  dna-observed: require \./dna-observed
+  app:   require \./app
+  tag:   require \./tag
+  attrs: require \./attrs
+  scope: require \./scope
+  ctrl:  require \./ctrl
+  observed: require \./observed

@@ -5,9 +5,9 @@
 #
 
 clone = require \clone
-observed = require \../dna-observed
-dna-scope = require \../dna-scope
-dna-attrs = require \../dna-attrs
+observed = require \../observed
+attrs = require \../attrs
+Scope = require \../scope
 
 clean-element = (element) ->
   if element?.tag-name
@@ -53,8 +53,7 @@ create-tag = ( tag-name, props = {} ) ->
         if props.controller
           @controller = new that @, @scope
           
-        @on \rendered, ~>
-          @ |> dna-attrs (props.attrs or {})
+        @on \rendered, ~> @ |> dna-attrs (props.attrs or {})
 
         @emit \created, it
         

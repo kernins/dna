@@ -1,6 +1,7 @@
 { map, each, keys, unique, initial, Str } = require \prelude-ls
 
-observed = require \../dna-observed
+observed = require \../observed
+computed-style = require \computed-style
 
 objs-list = ($expr) ->
   vars = $expr.match /(this(?:\.[a-zA-Z0-9_\[\]]+)*)/g
@@ -20,8 +21,11 @@ render-fn = ($element, $scope, $template = '') ->
        | typeof! $template is \String   => $template
        | typeof! $template is \Function => $scope |> $template
        | _                              => ''
-
-  $element.emit \rendered
+       
+  try 
+    $element.trigger \rendered
+  catch
+    console.warn '[render-fn] There is no eddy or other event emitter'
 
 module.exports = 
 
@@ -109,9 +113,23 @@ module.exports =
       (it |> $scope.$eval |> observed)
         .on \update, ->
           set!
+
+  \dna-show : ($element, $scope, $expr) ->
+    display-style = computed-style $element, \display
+    set = ->
+      if $scope.$eval "(#{$expr})"
+        $element.style.display = display-style or \block
+      else
+        $element.style.display = \none
+
+    set!
+    $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
+      (it |> $scope.$eval |> observed)
+        .on \update, ->
+          set!
           
   \dna-template : ($element, $scope, $expr) ->
-    console.log \dna-template
+    ## console.log \dna-template
     if $template = $scope.$eval $expr
       $element.template = $template
       $element.render = (template = $element.template) ->
@@ -121,14 +139,14 @@ module.exports =
       , 50 # TODO test it with controller
 
   \dna-controller : ($element, $scope, $expr) ->
-    console.log \dna-controller
+    ## console.log \dna-controller
     if Ctrl = ($scope.$eval $expr)
       set-timeout ~>
         $element.controller = new Ctrl $element $scope
       , 50 # TODO test to all-attrs initialized before this
       
   \dna-render-on-splice : ($element, $scope, $expr) ->
-    console.log \dna-render-on-splice
+    ## console.log \dna-render-on-splice
     if /^this\.?([a-z0-9_\.]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
       [path, svar] = [that.1, that.2]
       parent =
@@ -144,7 +162,7 @@ module.exports =
       throw "[dna-render-on-splice] Invalid model: #{$expr}"
       
   \dna-render-on-update : ($element, $scope, $expr) ->
-    console.log \dna-render-on-update
+    ## console.log \dna-render-on-update
     if /^this\.?([a-z0-9_\.]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
       [path, svar] = [that.1, that.2]
       parent =

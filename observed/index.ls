@@ -30,5 +30,4 @@ observed = (obj) ->
         , 1
     obj
 
-
 module.exports = observed

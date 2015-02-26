@@ -2,7 +2,7 @@
 # dna-ctrl
 #
 
-dna-attrs = (require \../dna-attrs)
+dna-attrs = (require \../attrs)
 
 clean-element = (element) ->
   if element?.tag-name
@@ -19,4 +19,3 @@ module.exports = class
   log: (...vars) ->
     vars.unshift "[#{@element.tag-name}]"
     window.dna-log?.apply @, vars
-    
