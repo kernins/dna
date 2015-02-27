@@ -54,7 +54,7 @@ create-tag = ( tag-name, props = {} ) ->
         if props.controller
           @controller = new that @, @scope
           
-        @on \rendered, ~> @ |> dna-attrs (props.attrs or {})
+        @on \rendered, ~> attrs @, (props.attrs or {})
 
         @emit \created, it
         
