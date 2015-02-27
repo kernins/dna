@@ -37,6 +37,11 @@ module.exports =
     $element.on \hover, ->
       $scope.$eval $expr
 
+  \dna-submit : ($element,$scope,$expr) ->
+    $element.on \submit, ->
+      $scope.$eval $expr
+      it.prevent-default!
+
   \dna-select-fn : ($element, $scope, $expr) ->  #TODO think more about *-fn and parameters
     $element.on 'select', ->
       if typeof! (fn = $scope.$eval $expr) is \Function
