@@ -1,3 +1,7 @@
+#
+# default attrs
+#
+
 { map, each, keys, unique, initial, Str } = require \prelude-ls
 
 observed = require \../observed
