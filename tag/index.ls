@@ -37,8 +37,9 @@ create-tag = ( tag-name, props = {} ) ->
     
       created-callback: value: ->
         ## console.log \created-callback tag-name
+        props-scope = clone (props.scope or {})
         
-        @scope = new dna-scope @, (clone ( props.scope or {} ))
+        @scope = (Scope::$get @).$new props-scope
         @scope |> observed
 
         if props.template
@@ -60,7 +61,7 @@ create-tag = ( tag-name, props = {} ) ->
       attached-callback: value: ->
         ## console.log \attached-callback tag-name
         
-        @scope:: = @scope.$parent @
+        ## @scope:: = @scope.$parent @
         
         ## if not @rendered
         @render?!

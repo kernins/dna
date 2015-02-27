@@ -91,14 +91,14 @@ module.exports =
       
 
   \dna-model : ($element, $scope, $expr) ->  #TODO Test it
-    set = -> $element.$scope.model = $scope.$eval $expr
-    if $element.scope  
-      if typeof! ($scope.$eval $expr) in <[ Object Array ]>
-        set!
-      else
-        set!
-        $expr |> objs-list |> each ->
-          (it |> $scope.$eval |> observed).on \update, -> set!
+    set = -> $element.scope?.model = $scope.$eval $expr
+    if typeof! ($scope.$eval $expr) in <[ Object Array ]>
+      set!
+    else
+      set!
+      $expr |> objs-list |> each ->
+        (it |> $scope.$eval |> observed).on \update, ->
+          set!
           
   \dna-class : ($element, $scope, $expr) ->
     set = ->
