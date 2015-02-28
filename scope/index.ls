@@ -1,4 +1,5 @@
-eval-in = (ctx, js) --> ((-> "#{js}" |> eval).call ctx)
+eval-in = (ctx, js) -->
+  ((-> "#{js}" |> eval).call ctx)
 
 find-parent-scope = (element) ->
   scope = void

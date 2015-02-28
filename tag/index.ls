@@ -4,7 +4,7 @@
 # Register custom element with given controller and scope
 #
 
-clone = require \clone
+clone = require \../clone
 observed = require \../observed
 attrs = require \../attrs
 Scope = require \../scope

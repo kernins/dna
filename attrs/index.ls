@@ -1,5 +1,5 @@
 { map, each, keys, unique, initial, Str } = require \prelude-ls
-clone = require \clone
+clone = require \../clone
 Scope = require \../scope
 
 default-attrs = require \./attrs

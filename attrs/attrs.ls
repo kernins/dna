@@ -2,15 +2,20 @@
 # default attrs
 #
 
-{ map, each, keys, unique, initial, Str } = require \prelude-ls
+{ map, each, keys, unique, initial, last, Str } = require \prelude-ls
 
 observed = require \../observed
+
 computed-style = require \computed-style
+
+var-str = -> it |> (Str.split \.) |> last
+
+initial-str = -> it |> (Str.split \.) |> initial |> Str.join \.
 
 objs-list = ($expr) ->
   vars = $expr.match /(this(?:\.[a-zA-Z0-9_\[\]]+)*)/g
   objs = vars |> map ->
-     it |> (Str.split \.) |> initial |> Str.join \.
+     it |> initial-str
   objs |> unique
 
 clean-element = (element) ->
@@ -45,6 +50,11 @@ module.exports =
     $element.on \submit, ->
       $scope.$eval $expr
       it.prevent-default!
+
+  \dna-key-enter : ($element,$scope,$expr) ->
+    $element.on \keydown, ->
+      if it.key-code is 13
+        $scope.$eval $expr
 
   \dna-select-fn : ($element, $scope, $expr) ->  #TODO think more about *-fn and parameters
     $element.on 'select', ->
@@ -100,14 +110,22 @@ module.exports =
       
 
   \dna-model : ($element, $scope, $expr) ->  #TODO Test it
-    set = -> $element.scope?.model = $scope.$eval $expr
+    set = ->
+      $element.scope?.model = $scope.$eval $expr
     if typeof! ($scope.$eval $expr) in <[ Object Array ]>
       set!
     else
       set!
-      $expr |> objs-list |> each ->
-        (it |> $scope.$eval |> observed).on \update, ->
-          set!
+      obj = $scope.$eval ($expr |> initial-str)
+      var-name = ($expr |> var-str)
+      if obj and var-name
+        (obj |> observed)
+          .on "update #{var-name}", ->
+            set!
+            
+      ## $expr |> objs-list |> each ->
+      ##   (it |> $scope.$eval |> observed).on \update, ->
+      ##     set!
           
   \dna-class : ($element, $scope, $expr) ->
     set = ->

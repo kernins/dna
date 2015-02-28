@@ -1,5 +1,3 @@
-clone = require \clone
-
 Scope = require \../scope
 attrs = require \../attrs
 
