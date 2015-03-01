@@ -9,7 +9,7 @@ clean-element = (element) ->
     while element.first-child
       element.remove-child element.first-child
 
-module.exports = class
+module.exports = class Controller
   (@element, @scope) ->
        
   here: -> @element.query-selector it
@@ -18,4 +18,5 @@ module.exports = class
 
   log: (...vars) ->
     vars.unshift "[#{@element.tag-name}]"
-    window.dna-log?.apply @, vars
+    console.log.apply console, vars
+    ## window.dna-log?.apply @, vars
