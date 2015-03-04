@@ -17,6 +17,6 @@ module.exports = class Controller
   here-all: -> @element.query-selector-all it
 
   log: (...vars) ->
-    vars.unshift "[#{@element.tag-name}]"
-    console.log.apply console, vars
-    ## window.dna-log?.apply @, vars
+    console.log \LOG
+    vars.unshift "[ #{@element.tag-name} ]"
+    console.log.apply window.console, vars

@@ -78,32 +78,51 @@ module.exports =
           set!
 
   \dna-bind : ($element, $scope, $expr) ->
-    if /^this\.?([a-z0-9_\.]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
+    if /^this\.?([a-z0-9_\.\[\]]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
       [path, svar] = [that.1, that.2]
       parent =
-          | path => $scope.$eval "this.#path"
+          | path? => $scope.$eval "this.#path"
           | _ => $scope
           
       $element.tag-name |> ~>
       
         | \INPUT is it => do ->
             set-model = -> parent[svar] = it
-            set-value = -> $element.value = it
-            
-            $element
-              .on \change, -> set-model $element.value
-              .on \keyup, -> set-model $element.value  #TODO not only keyup and not every
+            set-value = ->
+              if $element.value != it
+                $element.value = it
+              
+            if parent[svar]?
+              $element.value = that
+            else if $element.value?
+              parent[svar] = that
+
             (parent |> observed)
-              .on "update #svar", -> set-value it
+              .on "update #svar", ->
+                set-value it
+              
+            $element
+              .on \change, ->
+                set-model $element.value
+              .on \keyup, ->
+                set-model $element.value  #TODO not only keyup and not every
+              
             
         | \SELECT is it => do ->
             set-model = -> parent[svar] = it
             set-value = -> $element.value = it
             
+            if parent[svar]?
+              $element.value = that
+            else if $element.value?
+              parent[svar] = that
+              
             $element
               .on \change, -> set-model $element.value
             (parent |> observed)
               .on "update #svar", -> set-value it
+
+
             
     else      
       throw "[dna-bind] Invalid model: #{$expr}"
