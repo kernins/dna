@@ -134,13 +134,15 @@ module.exports =
     if typeof! ($scope.$eval $expr) in <[ Object Array ]>
       set!
     else
-      set!
       obj = $scope.$eval ($expr |> initial-str)
       var-name = ($expr |> var-str)
       if obj and var-name
         (obj |> observed)
           .on "update #{var-name}", ->
             set!
+      set-timeout ~>
+        set!
+      , 1 # workaround for FF on slow render with disabled console
             
       ## $expr |> objs-list |> each ->
       ##   (it |> $scope.$eval |> observed).on \update, ->
@@ -154,7 +156,10 @@ module.exports =
           $element.class-list.add key
         else
           $element.class-list.remove key
-    set!
+    set-timeout ~>
+      set!
+    , 1 # workaround for FF on slow render with disabled console
+    
     $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
       (it |> $scope.$eval |> observed)
         .on \update, ->
@@ -168,11 +173,14 @@ module.exports =
       else
         $element.style.display = \none
 
-    set!
     $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
       (it |> $scope.$eval |> observed)
         .on \update, ->
           set!
+    set-timeout ~>
+      set!
+    , 1 # workaround
+          
           
   \dna-template : ($element, $scope, $expr) ->
     ## console.log \dna-template
