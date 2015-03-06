@@ -62,12 +62,19 @@ module.exports =
         fn ...
 
   \dna-text : ($element, $scope, $expr) ->
-    set = -> $element.inner-text = $scope.$eval $expr
-    set!
+    set = ->
+     ($scope.$eval $expr) |> ~>
+          $element.inner-text = it 
+          $element.text-content = it
+          
     $expr |> objs-list |> each ->
       (it |> $scope.$eval |> observed)
         .on \update, ->
           set!
+    set-timeout ~>
+      set!
+    , 1 # workaround
+          
 
   \dna-html : ($element, $scope, $expr) ->
     set = -> $element.inner-html = $scope.$eval $expr
@@ -179,11 +186,25 @@ module.exports =
           set!
     set-timeout ~>
       set!
-    , 1 # workaround
+    , 1 # workaround for FF on slow render with disabled console
+
+  \dna-disabled : ($element, $scope, $expr) ->
+    set = ->
+      if $scope.$eval "(#{$expr})"
+        $element.set-attribute \disabled, ''
+      else
+        $element.remove-attribute \disabled
+
+    $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
+      (it |> $scope.$eval |> observed)
+        .on \update, ->
+          set!
+    set-timeout ~>
+      set!
+    , 1 # workaround for FF on slow render with disabled console
           
-          
+
   \dna-template : ($element, $scope, $expr) ->
-    ## console.log \dna-template
     if $template = $scope.$eval $expr
       $element.template = $template
       $element.render = (template = $element.template) ->
