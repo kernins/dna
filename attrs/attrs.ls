@@ -56,6 +56,11 @@ module.exports =
       if it.key-code is 13
         $scope.$eval $expr
 
+  \dna-keydown : ($element,$scope,$expr) ->
+    $element.on \keydown, ->
+      if typeof! ($scope.$eval $expr) is \Function
+        console.log \KEYDOWN, that
+
   \dna-select-fn : ($element, $scope, $expr) ->  #TODO think more about *-fn and parameters
     $element.on 'select', ->
       if typeof! (fn = $scope.$eval $expr) is \Function
@@ -128,13 +133,9 @@ module.exports =
               .on \change, -> set-model $element.value
             (parent |> observed)
               .on "update #svar", -> set-value it
-
-
-            
     else      
       throw "[dna-bind] Invalid model: #{$expr}"
       
-
   \dna-model : ($element, $scope, $expr) ->  #TODO Test it
     set = ->
       $element.scope?.model = $scope.$eval $expr

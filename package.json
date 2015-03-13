@@ -22,6 +22,8 @@
     "LiveScript": "^1.3.1",
     "clone": "^0.1.18",
     "computed-style": "^0.3.0",
+    "crossroads": "^0.12.0",
+    "hasher": "^1.2.0",
     "livescript-loader": "^0.1.3",
     "prelude-ls": "^1.1.1",
     "webpack": "^1.6.0"

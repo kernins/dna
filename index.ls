@@ -6,3 +6,4 @@ module.exports =
   scope: require \./scope
   ctrl:  require \./ctrl
   observed: require \./observed
+  router: require \./router
