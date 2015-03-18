@@ -5,7 +5,6 @@ Scope = require \../scope
 default-attrs = require \./attrs
 
 apply-attr = (element, attrs, key) ->
-  ## console.log \apply-attr, element, attrs, key
   element.$$dna-attrs = element.$$dna-attrs or {}
 
   if not (element.$$dna-attrs[key])

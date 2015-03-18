@@ -1,3 +1,13 @@
+{keys, map, obj-to-lists, Str, Obj} = require \prelude-ls
+
+## wrap = (str,obj) ->
+##   names = ((obj |> Obj.filter -> typeof! it is \Object) |> keys)
+##   ctx-names = (names |> map -> "this.#it") |> Str.join \,
+##   "(function (#{names |> Str.join \, }){ return (#{str}); }).bind(this)(#{ctx-names})"
+
+## wrap = (str,obj) ->
+##   "(function ($scope){ return (#{str}); }).bind(this)(this)"
+
 eval-in = (ctx, js) -->
   ((-> "#{js}" |> eval).call ctx)
 

@@ -25,7 +25,7 @@ clean-element = (element) ->
 
 render-fn = ($element, $scope, $template = '') ->
   clean-element $element
-
+     
   $element.innerHTML = do ~>
        | typeof! $template is \String   => $template
        | typeof! $template is \Function => $scope |> $template
@@ -38,35 +38,47 @@ render-fn = ($element, $scope, $template = '') ->
 
 module.exports = 
 
-  \dna-click : ($element,$scope,$expr) ->
-    $element.on \click, ->
+  \x-click : ($element,$scope,$expr) ->
+    $element.on \click, ($event)->
       $scope.$eval $expr
 
-  \dna-hover : ($element,$scope,$expr) ->
+  \x-hover : ($element,$scope,$expr) ->
     $element.on \hover, ->
       $scope.$eval $expr
 
-  \dna-submit : ($element,$scope,$expr) ->
+  \x-blur : ($element,$scope,$expr) ->
+    $element.on \blur, ->
+      set-timeout ->
+        $scope.$eval $expr
+      , 300
+
+
+  \x-submit : ($element,$scope,$expr) ->
     $element.on \submit, ->
       $scope.$eval $expr
       it.prevent-default!
 
-  \dna-key-enter : ($element,$scope,$expr) ->
+  \x-key-enter : ($element,$scope,$expr) ->
     $element.on \keydown, ->
       if it.key-code is 13
         $scope.$eval $expr
 
-  \dna-keydown : ($element,$scope,$expr) ->
+  \x-keydown : ($element,$scope,$expr) ->
     $element.on \keydown, ->
-      if typeof! ($scope.$eval $expr) is \Function
-        console.log \KEYDOWN, that
+      $scope.$eval $expr #TODO $event
+      ## if typeof! ($scope.$eval $expr) is \Function
+      ##   console.log \KEYDOWN, that
+        
+  \x-keyup : ($element,$scope,$expr) ->
+    $element.on \keyup, ($event)-> 
+      $scope.$eval $expr #TODO $event
 
-  \dna-select-fn : ($element, $scope, $expr) ->  #TODO think more about *-fn and parameters
+  \x-select-fn : ($element, $scope, $expr) ->  #TODO think more about *-fn and parameters
     $element.on 'select', ->
       if typeof! (fn = $scope.$eval $expr) is \Function
         fn ...
 
-  \dna-text : ($element, $scope, $expr) ->
+  \x-text : ($element, $scope, $expr) ->
     set = ->
      ($scope.$eval $expr) |> ~>
           $element.inner-text = it 
@@ -81,7 +93,7 @@ module.exports =
     , 1 # workaround
           
 
-  \dna-html : ($element, $scope, $expr) ->
+  \x-html : ($element, $scope, $expr) ->
     set = -> $element.inner-html = $scope.$eval $expr
     set!
     $expr |> objs-list |> each ->
@@ -89,7 +101,7 @@ module.exports =
         .on \update, ->
           set!
 
-  \dna-bind : ($element, $scope, $expr) ->
+  \x-bind : ($element, $scope, $expr) ->
     if /^this\.?([a-z0-9_\.\[\]]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
       [path, svar] = [that.1, that.2]
       parent =
@@ -136,7 +148,7 @@ module.exports =
     else      
       throw "[dna-bind] Invalid model: #{$expr}"
       
-  \dna-model : ($element, $scope, $expr) ->  #TODO Test it
+  \x-model : ($element, $scope, $expr) ->  #TODO Test it
     set = ->
       $element.scope?.model = $scope.$eval $expr
     if typeof! ($scope.$eval $expr) in <[ Object Array ]>
@@ -156,7 +168,7 @@ module.exports =
       ##   (it |> $scope.$eval |> observed).on \update, ->
       ##     set!
           
-  \dna-class : ($element, $scope, $expr) ->
+  \x-class : ($element, $scope, $expr) ->
     set = ->
       expr = $scope.$eval "(#{$expr})"
       for key, value of expr
@@ -173,7 +185,7 @@ module.exports =
         .on \update, ->
           set!
 
-  \dna-show : ($element, $scope, $expr) ->
+  \x-show : ($element, $scope, $expr) ->
     display-style = computed-style $element, \display
     set = ->
       if $scope.$eval "(#{$expr})"
@@ -189,7 +201,7 @@ module.exports =
       set!
     , 1 # workaround for FF on slow render with disabled console
 
-  \dna-disabled : ($element, $scope, $expr) ->
+  \x-disabled : ($element, $scope, $expr) ->
     set = ->
       if $scope.$eval "(#{$expr})"
         $element.set-attribute \disabled, ''
@@ -205,7 +217,7 @@ module.exports =
     , 1 # workaround for FF on slow render with disabled console
           
 
-  \dna-template : ($element, $scope, $expr) ->
+  \x-template : ($element, $scope, $expr) ->
     if $template = $scope.$eval $expr
       $element.template = $template
       $element.render = (template = $element.template) ->
@@ -214,15 +226,15 @@ module.exports =
         $element.render!
       , 50 # TODO test it with controller
 
-  \dna-controller : ($element, $scope, $expr) ->
-    ## console.log \dna-controller
+  \x-controller : ($element, $scope, $expr) ->
+    ## console.log \x-controller
     if Ctrl = ($scope.$eval $expr)
       set-timeout ~>
         $element.controller = new Ctrl $element $scope
       , 50 # TODO test to all-attrs initialized before this
       
-  \dna-render-on-splice : ($element, $scope, $expr) ->
-    ## console.log \dna-render-on-splice
+  \x-render-on-splice : ($element, $scope, $expr) ->
+    ## console.log \x-render-on-splice
     if /^this\.?([a-z0-9_\.]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
       [path, svar] = [that.1, that.2]
       parent =
@@ -237,19 +249,19 @@ module.exports =
     else
       throw "[dna-render-on-splice] Invalid model: #{$expr}"
       
-  \dna-render-on-update : ($element, $scope, $expr) ->
-    ## console.log \dna-render-on-update
+  \x-render-on-update : ($element, $scope, $expr) ->
+    ## console.log \x-render-on-update
     if /^this\.?([a-z0-9_\.]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
       [path, svar] = [that.1, that.2]
       parent =
           | path => $scope.$eval "this.#path"
           | _ => $scope
       
-      if typeof! (array = $scope.$eval $expr) in <[String Number Boolean]>
-        (parent |> observed)
-          .on "update #{svar}", -> $element.render?!
-      else
-        throw "[dna-render-on-update] Not an simple variable: #{$expr}"
+      ## if typeof! (array = $scope.$eval $expr) in <[String Number Boolean]>
+      (parent |> observed)
+        .on "update #{svar}", -> $element.render?!
+      ## else
+      ##   throw "[dna-render-on-update] Not an simple variable: #{$expr}"
     else
       throw "[dna-render-on-update] Invalid model: #{$expr}"
       
