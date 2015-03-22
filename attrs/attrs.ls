@@ -13,7 +13,7 @@ var-str = -> it |> (Str.split \.) |> last
 initial-str = -> it |> (Str.split \.) |> initial |> Str.join \.
 
 objs-list = ($expr) ->
-  vars = $expr.match /(this(?:\.[a-zA-Z0-9_\[\]]+)*)/g
+  vars = $expr.match /(this(?:\.[a-zA-Z0-9_\[\]\'\"]+)*)/g  # TODO more inteligent parsing
   objs = vars |> map ->
      it |> initial-str
   objs |> unique
@@ -107,6 +107,8 @@ module.exports =
       parent =
           | path? => $scope.$eval "this.#path"
           | _ => $scope
+
+      obj = parent[svar]
           
       $element.tag-name |> ~>
       
@@ -145,6 +147,19 @@ module.exports =
               .on \change, -> set-model $element.value
             (parent |> observed)
               .on "update #svar", -> set-value it
+              
+        | \FORM is it => do ->
+            ## console.log \FORM, obj, $expr
+            ## form2js = require \form2js
+            ## if typeof! obj isnt \Object
+            ##   throw "[x-bind] FORM need Object as model"
+            ## set-model = ->
+            ## set-value = ->
+            ## $element.on 'change', ->
+            ##   console.log it, $element
+            ##   console.log (form2js)
+
+
     else      
       throw "[dna-bind] Invalid model: #{$expr}"
       

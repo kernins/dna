@@ -21,14 +21,15 @@ observed = (obj) ->
   else
     obj.__is-observed = yes
 
-    obj |> keys |> each (key)->
+    obj |> keys |> each (key) ->
       if (typeof! obj[key]) is \Array
         observe-array obj, key
-
 
     Object.observe obj, ->
       obj.emit \update, it
       it |> each (o) ->
+        if (typeof! o.object[o.name]) is \Array and o.type is \update
+            observe-array obj, o.name
         set-timeout ->
           obj.emit "#{o.type} #{o.name}", o.object?[o.name], o.old-value
         , 1
