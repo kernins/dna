@@ -13,7 +13,13 @@ var-str = -> it |> (Str.split \.) |> last
 initial-str = -> it |> (Str.split \.) |> initial |> Str.join \.
 
 objs-list = ($expr) ->
-  vars = $expr.match /(this(?:\.[a-zA-Z0-9_\[\]\'\"]+)*)/g  # TODO more inteligent parsing
+  vars = $expr.match //
+                     (?:^|[^a-z0-9_$\.])
+                     ((?:[a-z_$][a-z0-9_$]+\.)+[a-z0-9_$]+)
+                     (?:$|[^a-z0-9_$\.])
+                     //gi
+  vars = (vars |> map -> it.replace /[^a-z0-9_$\.]/gi, '')
+  return [] if not vars
   objs = vars |> map ->
      it |> initial-str
   objs |> unique
@@ -63,14 +69,12 @@ module.exports =
         $scope.$eval $expr
 
   \x-keydown : ($element,$scope,$expr) ->
-    $element.on \keydown, ->
-      $scope.$eval $expr #TODO $event
-      ## if typeof! ($scope.$eval $expr) is \Function
-      ##   console.log \KEYDOWN, that
+    $element.on \keydown, (ev) ->
+      $scope.$eval $expr, (\$event : ev)
         
   \x-keyup : ($element,$scope,$expr) ->
-    $element.on \keyup, ($event)-> 
-      $scope.$eval $expr #TODO $event
+    $element.on \keyup, (ev) -> 
+      $scope.$eval $expr, (\$event : ev)
 
   \x-select-fn : ($element, $scope, $expr) ->  #TODO think more about *-fn and parameters
     $element.on 'select', ->
@@ -101,10 +105,17 @@ module.exports =
           set!
 
   \x-bind : ($element, $scope, $expr) ->
-    if /^this\.?([a-z0-9_\.\[\]]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
+    if // 
+       ^\s*
+       ((?:[a-z_$][a-z0-9_$\[\]\'\"]+\.?)+)  # some.path
+       [\.]                                  # .
+       ((?:[a-z_$][a-z0-9_$\[\]\'\"]*))      # variable
+       \s*$
+       //gim == $expr  
+       
       [path, svar] = [that.1, that.2]
       parent =
-          | path? => $scope.$eval "this.#path"
+          | path? => $scope.$eval "#path"
           | _ => $scope
 
       obj = parent[svar]
@@ -148,14 +159,12 @@ module.exports =
               .on "update #svar", -> set-value it
               
         | \FORM is it => do ->
-            ## console.log \FORM, obj, $expr
             ## form2js = require \form2js
             ## if typeof! obj isnt \Object
             ##   throw "[x-bind] FORM need Object as model"
             ## set-model = ->
             ## set-value = ->
             ## $element.on 'change', ->
-            ##   console.log it, $element
             ##   console.log (form2js)
 
 
@@ -193,7 +202,6 @@ module.exports =
     set-timeout ~>
       set!
     , 1 # workaround for FF on slow render with disabled console
-    
     $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
       (it |> $scope.$eval |> observed)
         .on \update, ->
@@ -201,16 +209,18 @@ module.exports =
 
   \x-show : ($element, $scope, $expr) ->
     display-style = computed-style $element, \display
+    if display-style is \none
+      display-style = \block
     set = ->
-      if $scope.$eval "(#{$expr})"
+      if $scope.$eval $expr
         $element.style.display = display-style or \block
       else
         $element.style.display = \none
 
     $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
-      (it |> $scope.$eval |> observed)
-        .on \update, ->
-          set!
+        (it |> $scope.$eval |> observed)
+          .on \update, ->
+            set!
     set-timeout ~>
       set!
     , 1 # workaround for FF on slow render with disabled console
@@ -241,18 +251,24 @@ module.exports =
       , 50 # TODO test it with controller
 
   \x-controller : ($element, $scope, $expr) ->
-    ## console.log \x-controller
     if Ctrl = ($scope.$eval $expr)
       set-timeout ~>
         $element.controller = new Ctrl $element $scope
       , 50 # TODO test to all-attrs initialized before this
       
   \x-render-on-splice : ($element, $scope, $expr) ->
-    ## console.log \x-render-on-splice
-    if /^this\.?([a-z0-9_\.]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
+    if // 
+       ^\s*
+       ((?:[a-z_$][a-z0-9_$\[\]\'\"]+\.?)+)  # some.path
+       [\.]                                  # .
+       ((?:[a-z_$][a-z0-9_$\[\]\'\"]*))      # variable
+       \s*$
+       //gim == $expr
+
       [path, svar] = [that.1, that.2]
+      
       parent =
-          | path => $scope.$eval "this.#path"
+          | path => $scope.$eval path
           | _ => $scope
       
       if typeof! (array = $scope.$eval $expr) is \Array
@@ -264,11 +280,18 @@ module.exports =
       throw "[dna-render-on-splice] Invalid model: #{$expr}"
       
   \x-render-on-update : ($element, $scope, $expr) ->
-    ## console.log \x-render-on-update
-    if /^this\.?([a-z0-9_\.]+)?\.([a-z0-9_]+)$/gim == $expr #TODO whitespaces
+    if //
+       ^\s*
+       ((?:[a-z_$][a-z0-9_$\[\]\'\"]+\.?)+)
+       [\.]
+       ((?:[a-z_$][a-z0-9_$\[\]\'\"]*)+)
+       \s*$
+       //gim == $expr
+    
       [path, svar] = [that.1, that.2]
+
       parent =
-          | path => $scope.$eval "this.#path"
+          | path => $scope.$eval "#path"
           | _ => $scope
       
       ## if typeof! (array = $scope.$eval $expr) in <[String Number Boolean]>
@@ -281,10 +304,17 @@ module.exports =
       
   \x-validate : ($element, $scope, $expr) ->
     rx = new RegExp $expr, \i
+
+    validate = ->
+      if (rx.test $element.value)
+        $element.class-list.remove \invalid
+      else
+        $element.class-list.add \invalid
+
+    
     if $element.tag-name is \INPUT
-      $element.on \keyup, ->
-        if (rx.test $element.value)
-          $element.class-list.remove \invalid
-        else
-          $element.class-list.add \invalid
+      $element.on \keyup, -> validate!
+      $element.on \change, -> validate!
+      $element.on \blur, -> validate!
+        
 

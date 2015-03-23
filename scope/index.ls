@@ -1,4 +1,4 @@
-{keys, map, obj-to-lists, Str, Obj} = require \prelude-ls
+{ keys, map, join, obj-to-lists, Str, Obj } = require \prelude-ls
 
 ## wrap = (str,obj) ->
 ##   names = ((obj |> Obj.filter -> typeof! it is \Object) |> keys)
@@ -8,8 +8,15 @@
 ## wrap = (str,obj) ->
 ##   "(function ($scope){ return (#{str}); }).bind(this)(this)"
 
-eval-in = (ctx, js) -->
-  ((-> "#{js}" |> eval).call ctx)
+eval-in = (ctx = window, js = '', args = {}) -->
+  [names, values] = (args |> obj-to-lists)
+  js = js.trim!
+  return if not js 
+  names.push \$scope
+  values.push ctx
+  names = names |> map -> "\"#{it}\""
+  fn = eval "new Function( #{ names |> join \, }, \" return (#{ js })\") "
+  fn.apply ctx, values
 
 find-parent-scope = (element) ->
   scope = void
@@ -34,7 +41,7 @@ Scope::$new = (props) ->
   
   new S props
 
-Scope::$eval = (js) -> eval-in @, js
+Scope::$eval = (js, args = {}) -> eval-in @, js, args
 
 Scope::$get = (element) ->
   if element.scope
