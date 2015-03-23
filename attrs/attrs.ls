@@ -52,7 +52,6 @@ module.exports =
         $scope.$eval $expr
       , 300
 
-
   \x-submit : ($element,$scope,$expr) ->
     $element.on \submit, ->
       $scope.$eval $expr
@@ -86,7 +85,7 @@ module.exports =
           
     $expr |> objs-list |> each ->
       (it |> $scope.$eval |> observed)
-        .on \update, ->
+        .on \update, ->  # TODO 'update var'
           set!
     set-timeout ~>
       set!
@@ -280,3 +279,12 @@ module.exports =
     else
       throw "[dna-render-on-update] Invalid model: #{$expr}"
       
+  \x-validate : ($element, $scope, $expr) ->
+    rx = new RegExp $expr, \i
+    if $element.tag-name is \INPUT
+      $element.on \keyup, ->
+        if (rx.test $element.value)
+          $element.class-list.remove \invalid
+        else
+          $element.class-list.add \invalid
+
