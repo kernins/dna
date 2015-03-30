@@ -46,6 +46,7 @@ module.exports =
 
   \x-click : ($element,$scope,$expr) ->
     $element.on \click, ($event)->
+      ## console.log \CLICK, $element,$scope,$expr, $event
       $scope.$eval $expr
 
   \x-hover : ($element,$scope,$expr) ->
@@ -123,7 +124,8 @@ module.exports =
       $element.tag-name |> ~>
       
         | \INPUT is it => do ->
-            set-model = -> parent[svar] = it
+            set-model = ->
+              parent[svar] = it
             set-value = ->
               if $element.value != it
                 $element.value = it
@@ -207,6 +209,20 @@ module.exports =
         .on \update, ->
           set!
 
+  \x-style : ($element, $scope, $expr) ->
+    set = ->
+      expr = $scope.$eval "(#{$expr})"
+      
+      for key, value of expr
+        $element.style[key] = value
+    set-timeout ~>
+      set!
+    , 1 # workaround for FF on slow render with disabled console
+    $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
+      (it |> $scope.$eval |> observed)
+        .on \update, ->
+          set!
+
   \x-show : ($element, $scope, $expr) ->
     display-style = computed-style $element, \display
     if display-style is \none
@@ -253,7 +269,7 @@ module.exports =
   \x-controller : ($element, $scope, $expr) ->
     if Ctrl = ($scope.$eval $expr)
       set-timeout ~>
-        $element.controller = new Ctrl $element $scope
+        $element.controller = new Ctrl $element, $scope
       , 50 # TODO test to all-attrs initialized before this
       
   \x-render-on-splice : ($element, $scope, $expr) ->
@@ -316,5 +332,3 @@ module.exports =
       $element.on \keyup, -> validate!
       $element.on \change, -> validate!
       $element.on \blur, -> validate!
-        
-
