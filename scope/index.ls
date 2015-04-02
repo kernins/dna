@@ -9,22 +9,27 @@
 ##   "(function ($scope){ return (#{str}); }).bind(this)(this)"
 
 eval-in = (ctx = window, js = '', args = {}) -->
-  [names, values] = (args |> obj-to-lists)
-  js = js.trim!
-  return if not js 
-  names.push \$scope
-  values.push ctx
-  names = names |> map -> "\"#{it}\""
-  fn = eval "new Function( #{ names |> join \, }, \" return (#{ js })\") "
-  fn.apply ctx, values
+  try
+    [names, values] = (args |> obj-to-lists)
+    js = js.trim!
+    return if not js 
+    names.push \$scope
+    values.push ctx
+    names = names |> map -> "\"#{it}\""
+    fn = eval "new Function( #{ names |> join \, }, \" return (#{ js })\") "
+    return fn.apply ctx, values
+  catch e
+    console.error "[Scope] eval-in: ", ctx, js, args, e
+    return null
 
 find-parent-scope = (element) ->
   scope = void
-  if element
+  current = element
+  if current
     do
-      element = element.parent-node
-      scope = element?.scope
-    until not element or scope?
+      current = current.parent-node
+      scope = current?.scope
+    until not current or scope?
     scope
 
 Scope = (props = {}) ->

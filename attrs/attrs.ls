@@ -87,15 +87,17 @@ module.exports =
      ($scope.$eval $expr) |> ~>
           $element.inner-text = it 
           $element.text-content = it
-          
+
     $expr |> objs-list |> each ->
+      if $element.tag-name is \B
+        console.log \EACH, it
       (it |> $scope.$eval |> observed)
         .on \update, ->  # TODO 'update var'
           set!
     set-timeout ~>
       set!
     , 1 # workaround
-          
+
 
   \x-html : ($element, $scope, $expr) ->
     set = -> $element.inner-html = $scope.$eval $expr
@@ -123,7 +125,7 @@ module.exports =
           
       $element.tag-name |> ~>
       
-        | \INPUT is it => do ->
+        | \INPUT is it or \TEXTAREA is it => do ->
             set-model = ->
               parent[svar] = it
             set-value = ->
@@ -324,11 +326,13 @@ module.exports =
     validate = ->
       if (rx.test $element.value)
         $element.class-list.remove \invalid
+        $element.class-list.add \valid        
       else
         $element.class-list.add \invalid
-
+        $element.class-list.remove \valid        
     
     if $element.tag-name is \INPUT
       $element.on \keyup, -> validate!
       $element.on \change, -> validate!
       $element.on \blur, -> validate!
+

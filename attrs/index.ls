@@ -8,12 +8,16 @@ apply-attr = (element, attrs, key) ->
   element.$$dna-attrs = element.$$dna-attrs or {}
 
   if not (element.$$dna-attrs[key])
-    element.$$dna-attrs[key] = yes
-    expr = element.get-attribute key
-    scope = (element |> Scope::$get)
+      element.$$dna-attrs[key] = yes
+      expr = element.get-attribute key
+      scope = (element |> Scope::$get)
 
-    if attrs[key]
-      new that element, scope, expr
+      try
+        if attrs[key]
+          new that element, scope, expr
+      catch e
+        console.error "[apply-attr] #{key} = #{expr}", element, e
+          
 
 module.exports = (element, user-attrs = {}) ->
   attrs = {} <<<< default-attrs <<<< user-attrs

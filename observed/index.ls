@@ -1,13 +1,13 @@
 { each, keys, Obj } = require \prelude-ls
 
-observe-array = (obj, key)->  #TODO update observation on hard Array updates
+observe-array = (obj, key) ->
   if Array.observe  # Chromium
     Array.observe obj[key], ~>
       it |> each (ev) ->
         set-timeout ->
           obj.emit "#{ev.type} #{key}", ev.object, ev
         , 1
-  else              # Other browserers
+  else
     Object.observe obj[key], ~>
       it |> each (ev) ->
         if ev.name is \length
@@ -16,6 +16,8 @@ observe-array = (obj, key)->  #TODO update observation on hard Array updates
           , 1
 
 observed = (obj) ->
+  return if typeof! obj isnt \Object
+  
   if obj.has-own-property \__isObserved
     obj
   else

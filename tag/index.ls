@@ -22,7 +22,8 @@ render-fn = ($element, $scope, $template = '', attributes = {}) ->
        | typeof! $template is \String   => $template
        | typeof! $template is \Function => $scope |> $template
        | _                              => ''
-       
+
+  $element.rendered = yes
   $element.emit \rendered
 
 instances = []
@@ -51,6 +52,7 @@ create-tag = ( tag-name, props = {} ) ->
           @scope = new Scope (props.scope or {})
         else
           @scope = (Scope::$get @).$new props-scope
+          
         @scope |> observed
 
         if props.template
@@ -77,8 +79,8 @@ create-tag = ( tag-name, props = {} ) ->
         
         ## @scope:: = @scope.$parent @
         
-        ## if not @rendered
-        @render?!
+        if not @rendered
+          @render?!
         
         ## @rendered = yes
 
