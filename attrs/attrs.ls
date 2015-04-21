@@ -58,9 +58,12 @@ module.exports =
       set-timeout ->
         $scope.$eval $expr
       , 300
-
+      
   \x-submit : ($element,$scope,$expr) ->
     $element.on \submit, ->
+      $element.elements |> each ->
+                        if it.tag-name?.to-lower-case! is \input
+                          it.emit \change
       $scope.$eval $expr
       it.prevent-default!
 
@@ -89,8 +92,6 @@ module.exports =
           $element.text-content = it
 
     $expr |> objs-list |> each ->
-      if $element.tag-name is \B
-        console.log \EACH, it
       (it |> $scope.$eval |> observed)
         .on \update, ->  # TODO 'update var'
           set!
@@ -108,6 +109,7 @@ module.exports =
           set!
 
   \x-bind : ($element, $scope, $expr) ->
+    
     if // 
        ^\s*
        ((?:[a-z_$][a-z0-9_$\[\]\'\"]+\.?)+)  # some.path
@@ -123,11 +125,12 @@ module.exports =
 
       obj = parent[svar]
           
-      $element.tag-name |> ~>
+      $element.tag-name.to-lower-case! |> ~>
       
-        | \INPUT is it or \TEXTAREA is it => do ->
+        | \input is it or \textarea is it => do ->
             set-model = ->
               parent[svar] = it
+              
             set-value = ->
               if $element.value != it
                 $element.value = it
@@ -148,9 +151,13 @@ module.exports =
                 set-model $element.value  #TODO not only keyup and not every
               
             
-        | \SELECT is it => do ->
-            set-model = -> parent[svar] = it
-            set-value = -> $element.value = it
+        | \select is it => do ->
+            
+            set-model = ->
+              parent[svar] = it
+              
+            set-value = ->
+              $element.value = it
             
             if parent[svar]?
               $element.value = that
@@ -158,11 +165,15 @@ module.exports =
               parent[svar] = that
               
             $element
-              .on \change, -> set-model $element.value
+              .on \change, ->
+                set-model $element.value
+                
             (parent |> observed)
-              .on "update #svar", -> set-value it
+              .on "update #svar", ->
+                if $element.value != "#{it}"
+                  set-value it
               
-        | \FORM is it => do ->
+        | \form is it => do ->
             ## form2js = require \form2js
             ## if typeof! obj isnt \Object
             ##   throw "[x-bind] FORM need Object as model"
@@ -242,6 +253,22 @@ module.exports =
     set-timeout ~>
       set!
     , 1 # workaround for FF on slow render with disabled console
+
+  \x-visible : ($element, $scope, $expr) ->
+    set = ->
+      if $scope.$eval $expr
+        $element.style.visibility = \visible
+      else
+        $element.style.visibility = \hidden
+
+    $expr |> objs-list |> each ->  
+      (it |> $scope.$eval |> observed)
+        .on \update, ->
+          set!
+    set-timeout ~>
+      set!
+    , 1 # workaround for FF on slow render with disabled console
+    
 
   \x-disabled : ($element, $scope, $expr) ->
     set = ->

@@ -1,4 +1,4 @@
-crossroads = require \crossroads
+crossroads = require \crossroads/dist/crossroads
 hasher = require \hasher
 { any, keys, find, each, Obj } = require \prelude-ls
 
@@ -14,6 +14,9 @@ open = ->
 router = crossroads.create! <<<<
                           greedy:yes
 
+hasher.changed.add ~>
+  router.parse it
+
 module.exports = 
 
   add: (routes) ->
@@ -26,9 +29,9 @@ module.exports =
             else
               router.add-route path, routes[path]
 
-      router.parse hasher.get-hash!
-      hasher.changed.add ~> router.parse it
+      current-hash = hasher.get-hash!
+      router.reset-state!
+      router.parse current-hash
 
   open: open
-
-
+  

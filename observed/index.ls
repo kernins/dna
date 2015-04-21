@@ -21,7 +21,12 @@ observed = (obj) ->
   if obj.has-own-property \__isObserved
     obj
   else
-    obj.__is-observed = yes
+    Object.define-property obj, '__isObserved', do
+                           enumerable: no
+                           configurable: no
+                           writable: no
+                           value: yes
+                           
 
     obj |> keys |> each (key) ->
       if (typeof! obj[key]) is \Array
