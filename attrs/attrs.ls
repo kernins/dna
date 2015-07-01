@@ -8,6 +8,8 @@ observed = require \../observed
 
 computed-style = require \computed-style
 
+apply-attr = require \./apply-attr
+
 var-str = -> it |> (Str.split \.) |> last
 
 initial-str = -> it |> (Str.split \.) |> initial |> Str.join \.
@@ -37,16 +39,16 @@ render-fn = ($element, $scope, $template = '') ->
        | typeof! $template is \Function => $scope |> $template
        | _                              => ''
        
-  try 
-    $element.trigger \rendered
+  try
+    $element.rendered = yes    
+    $element.emit \rendered
   catch
     console.warn '[render-fn] There is no eddy or other event emitter'
 
-module.exports = 
+module.exports = default-attrs =
 
   \x-click : ($element,$scope,$expr) ->
     $element.on \click, ($event)->
-      ## console.log \CLICK, $element,$scope,$expr, $event
       $scope.$eval $expr
 
   \x-hover : ($element,$scope,$expr) ->
@@ -180,7 +182,6 @@ module.exports =
             ## set-model = ->
             ## set-value = ->
             ## $element.on 'change', ->
-            ##   console.log (form2js)
 
 
     else      
@@ -291,6 +292,15 @@ module.exports =
       $element.template = $template
       $element.render = (template = $element.template) ->
                              render-fn $element, $scope, $template
+
+      $element
+        .on \rendered, ~>
+          attrs = {} <<<< default-attrs 
+
+          attrs |> keys |> each (key) ->
+            ($element.query-selector-all "[#{key}]") |> each ->
+              apply-attr it, attrs, key
+
       set-timeout ->
         $element.render!
       , 50 # TODO test it with controller

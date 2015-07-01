@@ -41,9 +41,11 @@ create-tag = ( tag-name, props = {} ) ->
     
       created-callback: value: ->
         self = @
+
         if props.single
           if (instances |> find -> it.tag-name == self.tag-name)
             that |> self.replace
+            self = that
             return
           
         props-scope = {} <<<< (props.scope or {})
@@ -68,22 +70,20 @@ create-tag = ( tag-name, props = {} ) ->
           @controller = new that @, @scope
           
         @on \rendered, ~>
+          @rendered = yes
+          ## @controller.log \rendered
           attrs @, (props.attributes or {})
 
         instances.push @
 
         @emit \created, it
         
-      attached-callback: value: ->
-        ## console.log \attached-callback tag-name
-        
-        ## @scope:: = @scope.$parent @
-        
         if not @rendered
-          @render?!
-        
-        ## @rendered = yes
-
+          set-timeout ~>
+            @render?!
+          , 1
+          
+      attached-callback: value: ->
         (@emit \attached, it)
       
       detached-callback: value: (-> (@emit \detached, it))
