@@ -110,6 +110,17 @@ module.exports = default-attrs =
         .on \update, ->
           set!
 
+  \x-href : ($element, $scope, $expr) ->
+    set = -> $element.set-attribute \href, ($scope.$eval $expr)
+    
+    $expr |> objs-list |> each ->
+      (it |> $scope.$eval |> observed)
+        .on \update, ->
+          set!
+          
+    set!
+          
+
   \x-bind : ($element, $scope, $expr) ->
     
     if // 
@@ -241,6 +252,7 @@ module.exports = default-attrs =
     display-style = computed-style $element, \display
     if display-style is \none
       display-style = \block
+      
     set = ->
       if $scope.$eval $expr
         $element.style.display = display-style or \block

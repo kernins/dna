@@ -17,10 +17,12 @@ router = crossroads.create! <<<<
 hasher.changed.add ~>
   router.parse it
 
-module.exports = 
+module.exports =
+
+  clear: ->
+    router.remove-all-routes!
 
   add: (routes) ->
-
     if routes
       routes |> Obj.keys |> each (path) ~>
             if (path.char-at 0) is \^ 

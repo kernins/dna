@@ -71,7 +71,6 @@ create-tag = ( tag-name, props = {} ) ->
           
         @on \rendered, ~>
           @rendered = yes
-          ## @controller.log \rendered
           attrs @, (props.attributes or {})
 
         instances.push @
