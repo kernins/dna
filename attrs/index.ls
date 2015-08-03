@@ -5,6 +5,7 @@ default-attrs = require \./attrs
 apply-attr = require \./apply-attr
 
 module.exports = (element, user-attrs = {}) ->
+
   attrs = {} <<<< default-attrs <<<< user-attrs
 
   attrs |> keys |> each (key) ->

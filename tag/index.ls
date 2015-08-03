@@ -41,9 +41,9 @@ create-tag = ( tag-name, props = {} ) ->
     
       created-callback: value: ->
         self = @
-
-        if props.single
-          if (instances |> find -> it.tag-name == self.tag-name)
+        
+        if props.single or @id
+          if (instances |> find -> it.tag-name == self.tag-name and it.id == self.id)
             that |> self.replace
             self = that
             return
@@ -66,12 +66,14 @@ create-tag = ( tag-name, props = {} ) ->
           @render = (template = @template) ->
                                   render-fn @, @scope, template
                                   
+        @on \rendered, ~>
+          
+          @rendered = yes
+          
+          attrs @, (props.attributes or {})
+
         if props.controller
           @controller = new that @, @scope
-          
-        @on \rendered, ~>
-          @rendered = yes
-          attrs @, (props.attributes or {})
 
         instances.push @
 
@@ -82,8 +84,7 @@ create-tag = ( tag-name, props = {} ) ->
             @render?!
           , 1
           
-      attached-callback: value: ->
-        (@emit \attached, it)
+      attached-callback: value: -> (@emit \attached, it)
       
       detached-callback: value: (-> (@emit \detached, it))
       

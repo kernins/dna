@@ -2,6 +2,7 @@
 # default attrs
 #
 
+
 { map, each, keys, unique, initial, last, Str } = require \prelude-ls
 
 observed = require \../observed
@@ -45,6 +46,9 @@ render-fn = ($element, $scope, $template = '') ->
   catch
     console.warn '[render-fn] There is no eddy or other event emitter'
 
+unselectable = require \modules/lib/unselectable
+    
+
 module.exports = default-attrs =
 
   \x-click : ($element,$scope,$expr) ->
@@ -54,6 +58,12 @@ module.exports = default-attrs =
   \x-hover : ($element,$scope,$expr) ->
     $element.on \hover, ->
       $scope.$eval $expr
+
+  \x-focus : ($element,$scope,$expr) ->
+    $element.on \focus, ->
+      set-timeout ->
+        $scope.$eval $expr
+      , 300      
 
   \x-blur : ($element,$scope,$expr) ->
     $element.on \blur, ->
@@ -92,6 +102,7 @@ module.exports = default-attrs =
      ($scope.$eval $expr) |> ~>
           $element.inner-text = it 
           $element.text-content = it
+
 
     $expr |> objs-list |> each ->
       (it |> $scope.$eval |> observed)
@@ -384,4 +395,77 @@ module.exports = default-attrs =
       $element.on \keyup, -> validate!
       $element.on \change, -> validate!
       $element.on \blur, -> validate!
+
+  \x-drag : ($element, $scope, $expr) ->
+
+    startX = null
+    startY = null
+    lastMoveTime = null
+    dragTimeout = 10
+
+    handler = ($event) ->
+
+      t = Date.now!
+
+      if t < (lastMoveTime + dragTimeout)
+        return
+
+      ## if startX == null or startY == null
+      ##   window.off \mousemove, handler
+
+      lastMoveTime := t
+
+      dx = $event.clientX - startX
+      dy = $event.clientY - startY
+      
+      $drag = { dx, dy }
+
+      $scope.$eval $expr, { $drag, $event }
+
+    mouseup-handler = ($event) ->
+
+      window.off \mousemove, handler
+
+      [startX, startY] := [null, null]
+
+    
+    $element.on \mousedown,  ($event) ->
+
+      lastMoveTime := Date.now!
+
+      [startX, startY] := [ $event.clientX, $event.clientY ]
+
+      window.on \mousemove,  handler
+
+      window.once \mouseup,  mouseup-handler
+      
+      window.once \dragend,  mouseup-handler      
+      
+    unselectable $element
+
+  \x-dragstart : ($element, $scope, $expr) ->
+  
+    handler = ($event) ->
+      window.off \mousemove, handler
+      $scope.$eval $expr, { $event }
+
+    $element.on \mousedown ,  ($event) ->
+      
+      window.on \mousemove , handler
+
+      window.once \mouseup ,  ($event) ->
+        window.off \mousemove, handler        
+
+  \x-dragend : ($element, $scope, $expr) ->
+
+    up-handler = ($event) ->
+      window.off \mouseup ,  up-handler      
+      $scope.$eval $expr, { $event }
+      
+    move-handler = ($event) ->
+      window.off \mousemove, move-handler
+      window.on \mouseup ,  up-handler
+  
+    $element.on \mousedown ,  ($event) ->
+      window.on \mousemove , move-handler
 
