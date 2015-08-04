@@ -230,6 +230,11 @@ module.exports = default-attrs =
       ##     set!
           
   \x-class : ($element, $scope, $expr) ->
+
+    #
+    if $element.class-list.contains \edit
+      console.log \X-CLASS
+    #     
     set = ->
       expr = $scope.$eval "(#{$expr})"
       for key, value of expr
@@ -240,6 +245,12 @@ module.exports = default-attrs =
     set-timeout ~>
       set!
     , 1 # workaround for FF on slow render with disabled console
+    #
+    if $element.class-list.contains \edit
+      console.log $expr
+      console.log ($expr |> objs-list)
+    #
+    # 
     $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
       (it |> $scope.$eval |> observed)
         .on \update, ->
@@ -260,6 +271,7 @@ module.exports = default-attrs =
           set!
 
   \x-show : ($element, $scope, $expr) ->
+
     display-style = computed-style $element, \display
     if display-style is \none
       display-style = \block
@@ -270,7 +282,9 @@ module.exports = default-attrs =
       else
         $element.style.display = \none
 
+
     $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
+                # 
         (it |> $scope.$eval |> observed)
           .on \update, ->
             set!

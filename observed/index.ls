@@ -1,11 +1,13 @@
 { each, keys, Obj } = require \prelude-ls
 
 observe-array = (obj, key) ->
+  
   if Array.observe  # Chromium
     Array.observe obj[key], ~>
       it |> each (ev) ->
         set-timeout ->
           obj.emit "#{ev.type} #{key}", ev.object, ev
+          obj.emit "update", ev.object, ev          
         , 1
   else
     Object.observe obj[key], ~>
@@ -13,6 +15,7 @@ observe-array = (obj, key) ->
         if ev.name is \length
           set-timeout ->
             obj.emit "splice #{key}", obj[key], ev
+            obj.emit "update", ev.object, ev                      
           , 1
 
 observed = (obj) ->
