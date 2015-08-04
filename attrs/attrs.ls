@@ -2,7 +2,6 @@
 # default attrs
 #
 
-
 { map, each, keys, unique, initial, last, Str } = require \prelude-ls
 
 observed = require \../observed
@@ -45,9 +44,6 @@ render-fn = ($element, $scope, $template = '') ->
     $element.emit \rendered
   catch
     console.warn '[render-fn] There is no eddy or other event emitter'
-
-unselectable = require \modules/lib/unselectable
-    
 
 module.exports = default-attrs =
 
@@ -455,7 +451,6 @@ module.exports = default-attrs =
       
       window.once \dragend,  mouseup-handler      
       
-    unselectable $element
 
   \x-dragstart : ($element, $scope, $expr) ->
   
