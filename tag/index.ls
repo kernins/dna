@@ -84,9 +84,13 @@ create-tag = ( tag-name, props = {} ) ->
             @render?!
           , 1
           
-      attached-callback: value: -> (@emit \attached, it)
+      attached-callback: value: ->
+        @attached = yes
+        (@emit \attached, it)
       
-      detached-callback: value: (-> (@emit \detached, it))
+      detached-callback: value: (->
+        @attached = no
+        (@emit \detached, it)
       
       attribute-changed-callback: value: (-> (@emit \attribute-changed, it))
 
