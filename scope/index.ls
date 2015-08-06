@@ -8,7 +8,18 @@
 ## wrap = (str,obj) ->
 ##   "(function ($scope){ return (#{str}); }).bind(this)(this)"
 
+window.eval-collect = {}
+
+collect-eval = (js) ->
+  window.eval-collection = window.eval-collection or {}
+  window.eval-collection[js] = window.eval-collection[js] or 0
+  window.eval-collection[js]++
+
 eval-in = (ctx = window, js = '', args = {}) -->
+  
+  if window.debug-mode
+    collect-eval js
+    
   try
     [names, values] = (args |> obj-to-lists)
     js = js.trim!

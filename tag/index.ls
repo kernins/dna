@@ -65,7 +65,14 @@ create-tag = ( tag-name, props = {} ) ->
         else
           @render = (template = @template) ->
                                   render-fn @, @scope, template
-                                  
+
+        @on \attached, ~>
+          
+          if not @rendered
+            set-timeout ~>
+              @render?!
+            , 1
+          
         @on \rendered, ~>
           
           @rendered = yes
@@ -73,16 +80,14 @@ create-tag = ( tag-name, props = {} ) ->
           attrs @, (props.attributes or {})
 
         if props.controller
-          @controller = new that @, @scope
+          set-timeout ~>
+            @controller = new that @, @scope
+          , 1
 
         instances.push @
 
         @emit \created, it
         
-        if not @rendered
-          set-timeout ~>
-            @render?!
-          , 1
           
       attached-callback: value: ->
         @attached = yes

@@ -227,10 +227,6 @@ module.exports = default-attrs =
           
   \x-class : ($element, $scope, $expr) ->
 
-    #
-    if $element.class-list.contains \edit
-      console.log \X-CLASS
-    #     
     set = ->
       expr = $scope.$eval "(#{$expr})"
       for key, value of expr
@@ -241,12 +237,6 @@ module.exports = default-attrs =
     set-timeout ~>
       set!
     , 1 # workaround for FF on slow render with disabled console
-    #
-    if $element.class-list.contains \edit
-      console.log $expr
-      console.log ($expr |> objs-list)
-    #
-    # 
     $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
       (it |> $scope.$eval |> observed)
         .on \update, ->
