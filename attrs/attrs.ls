@@ -316,8 +316,11 @@ module.exports = default-attrs =
       $element.render = (template = $element.template) ->
                              render-fn $element, $scope, $template
 
+      console.log "[x-template]", $element.get-attribute \x-template
+
       $element
         .on \rendered, ~>
+          console.log '[onrendered]', $element.get-attribute \x-template
           attrs = {} <<<< default-attrs 
 
           attrs |> keys |> each (key) ->
@@ -326,7 +329,7 @@ module.exports = default-attrs =
 
       set-timeout ->
         $element.render!
-      , 50 # TODO test it with controller
+      , 100 # TODO test it with controller
 
   \x-controller : ($element, $scope, $expr) ->
     if Ctrl = ($scope.$eval $expr)

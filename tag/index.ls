@@ -66,23 +66,16 @@ create-tag = ( tag-name, props = {} ) ->
           @render = (template = @template) ->
                                   render-fn @, @scope, template
 
+        if props.controller
+          @controller = new that @, @scope
+
         @on \attached, ~>
-          
           if not @rendered
-            set-timeout ~>
-              @render?!
-            , 1
+            @render?!
           
         @on \rendered, ~>
-          
           @rendered = yes
-          
           attrs @, (props.attributes or {})
-
-        if props.controller
-          set-timeout ~>
-            @controller = new that @, @scope
-          , 1
 
         instances.push @
 
