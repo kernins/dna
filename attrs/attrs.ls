@@ -39,11 +39,13 @@ render-fn = ($element, $scope, $template = '') ->
        | typeof! $template is \Function => $scope |> $template
        | _                              => ''
        
-  try
-    $element.rendered = yes    
-    $element.emit \rendered
-  catch
-    console.warn '[render-fn] There is no eddy or other event emitter'
+  $element.rendered = yes
+  set-timeout ~>
+    try
+      $element.emit \rendered
+    catch
+      console.warn '[render-fn] There is no eddy or other event emitter'
+  , 150
 
 module.exports = default-attrs =
 
@@ -316,7 +318,6 @@ module.exports = default-attrs =
       $element.render = (template = $element.template) ->
                              render-fn $element, $scope, $template
 
-
       $element
         .on \rendered, ~>
           attrs = {} <<<< default-attrs 
@@ -328,6 +329,7 @@ module.exports = default-attrs =
       set-timeout ->
         $element.render!
       , 100 # TODO test it with controller
+      $element.emit \x-template
 
   \x-controller : ($element, $scope, $expr) ->
     if Ctrl = ($scope.$eval $expr)
@@ -380,6 +382,23 @@ module.exports = default-attrs =
       ##   throw "[dna-render-on-update] Not an simple variable: #{$expr}"
     else
       throw "[dna-render-on-update] Invalid model: #{$expr}"
+
+  \x-validate-expr : ($element, $scope, $expr) ->
+    rx = new RegExp $expr, \i
+
+    validate = ->
+      if $scope.$eval $expr
+        $element.class-list.remove \invalid
+        $element.class-list.add \valid        
+      else
+        $element.class-list.add \invalid
+        $element.class-list.remove \valid        
+    
+    if $element.tag-name is \INPUT
+      $element.on \keyup, -> validate!
+      $element.on \change, -> validate!
+      $element.on \blur, -> validate!
+      
       
   \x-validate : ($element, $scope, $expr) ->
     rx = new RegExp $expr, \i
