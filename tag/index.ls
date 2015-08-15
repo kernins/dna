@@ -53,7 +53,7 @@ create-tag = ( tag-name, props = {} ) ->
         if props.isolated
           @scope = new Scope (props.scope or {})
         else
-          @scope = (Scope::$get @).$new props-scope
+          @scope = (Scope::$get @)?.$new props-scope
           
         @scope |> observed
 
