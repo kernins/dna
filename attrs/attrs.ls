@@ -399,7 +399,6 @@ module.exports = default-attrs =
       $element.on \change, -> validate!
       $element.on \blur, -> validate!
       
-      
   \x-validate : ($element, $scope, $expr) ->
     rx = new RegExp $expr, \i
 
@@ -488,3 +487,9 @@ module.exports = default-attrs =
     $element.on \mousedown ,  ($event) ->
       window.on \mousemove , move-handler
 
+
+  \x-mousedown-follow : ($element) ->
+    $element.on \mousedown, ->
+      if $element.has-attribute \href
+        window.location = $element.href
+      
