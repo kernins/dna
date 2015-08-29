@@ -53,7 +53,7 @@ create-tag = ( tag-name, props = {} ) ->
         if props.isolated
           @scope = new Scope (props.scope or {})
         else
-          @scope = (Scope::$get @)?.$new props-scope
+          @scope = (Scope::$get @).$new props-scope
           
         @scope |> observed
 
@@ -81,13 +81,12 @@ create-tag = ( tag-name, props = {} ) ->
 
         @emit \created, it
         
-          
       attached-callback: value: ->
         @attached = yes
         (@emit \attached, it)
       
       detached-callback: value: ->
-        @attached = yes
+        @attached = no
         (@emit \detached, it)
       
       attribute-changed-callback: value: (-> (@emit \attribute-changed, it))

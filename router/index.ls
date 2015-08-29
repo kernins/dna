@@ -2,7 +2,8 @@ crossroads = require \crossroads/dist/crossroads
 hasher = require \hasher
 { any, keys, find, each, Obj } = require \prelude-ls
 
-hasher.raw = yes
+## hasher.raw = yes
+hasher.prepend-hash = \!
 hasher.init!
 
 open = ->

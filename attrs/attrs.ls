@@ -219,6 +219,8 @@ module.exports = default-attrs =
         (obj |> observed)
           .on "update #{var-name}", ->
             set!
+        $element.scope.on 'update model', ~>
+          obj[var-name] = it
       set-timeout ~>
         set!
       , 1 # workaround for FF on slow render with disabled console
@@ -270,12 +272,10 @@ module.exports = default-attrs =
       else
         $element.style.display = \none
 
-
     $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
-                # 
-        (it |> $scope.$eval |> observed)
-          .on \update, ->
-            set!
+      (it |> $scope.$eval |> observed)
+        .on \update, ->
+          set!
     set-timeout ~>
       set!
     , 1 # workaround for FF on slow render with disabled console
