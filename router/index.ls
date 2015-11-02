@@ -48,7 +48,15 @@ module.exports =
       routeGroups[group.id] = group
 
       routes |> Obj.keys |> each (path)~>
-         group.add(router.add-route ((path.char-at 0) is \^) && (new RegExp path) || path, routes[path])
+         if routes[path] instanceof Array
+            if typeof routes[path][0] isnt \function then throw 'Invalid route "'+path+'": handler must be a function'
+            r = routes[path][0]
+            p = routes[path][1] or 0
+         else 
+            if typeof routes[path] isnt \function then throw 'Invalid route "'+path+'": handler must be a function'
+            r = routes[path]
+            p = 0
+         group.add(router.add-route ((path.char-at 0) is \^) && (new RegExp path) || path, r, p)
 
       current-hash = hasher.get-hash!
       router.reset-state!
