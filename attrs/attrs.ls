@@ -77,11 +77,6 @@ module.exports = default-attrs =
       $scope.$eval $expr
       it.prevent-default!
 
-  \x-key-enter : ($element,$scope,$expr) ->
-    $element.on \keydown, ->
-      if it.key-code is 13
-        $scope.$eval $expr
-
   \x-keydown : ($element,$scope,$expr) ->
     $element.on \keydown, (ev) ->
       $scope.$eval $expr, (\$event : ev)
@@ -89,6 +84,14 @@ module.exports = default-attrs =
   \x-keyup : ($element,$scope,$expr) ->
     $element.on \keyup, (ev) -> 
       $scope.$eval $expr, (\$event : ev)
+
+  \x-keyup-noenter : ($element,$scope,$expr) ->
+    $element.on \keyup, (ev) ->
+      if ev.keyCode != 13 then $scope.$eval $expr, (\$event : ev)
+
+  \x-key-enter : ($element,$scope,$expr) ->
+    $element.on \keyup, ->
+      if it.key-code is 13 then $scope.$eval $expr
 
   \x-select-fn : ($element, $scope, $expr) ->  #TODO think more about *-fn and parameters
     $element.on 'select', ->
@@ -310,8 +313,12 @@ module.exports = default-attrs =
     set-timeout ~>
       set!
     , 1 # workaround for FF on slow render with disabled console
-          
 
+  \x-focus-on : ($element, $scope, $expr) ->
+    $expr |> objs-list |> each ->  # TODO test on "this.value" with not observed this
+      (it |> $scope.$eval |> observed).on \update, ->
+        if $scope.$eval "(#{$expr})" then $element.focus!
+          
   \x-template : ($element, $scope, $expr) ->
     if $template = $scope.$eval $expr
       $element.template = $template
@@ -384,8 +391,6 @@ module.exports = default-attrs =
       throw "[dna-render-on-update] Invalid model: #{$expr}"
 
   \x-validate-expr : ($element, $scope, $expr) ->
-    rx = new RegExp $expr, \i
-
     validate = ->
       if $scope.$eval $expr
         $element.class-list.remove \invalid
@@ -395,13 +400,12 @@ module.exports = default-attrs =
         $element.class-list.remove \valid        
     
     if $element.tag-name is \INPUT
-      $element.on \keyup, -> validate!
+      $element.on \keyup, -> 
+        if it.keyCode != 13 then validate!
       $element.on \change, -> validate!
-      $element.on \blur, -> validate!
       
   \x-validate : ($element, $scope, $expr) ->
     rx = new RegExp $expr, \i
-
     validate = ->
       if (rx.test $element.value)
         $element.class-list.remove \invalid
@@ -411,9 +415,9 @@ module.exports = default-attrs =
         $element.class-list.remove \valid        
     
     if $element.tag-name is \INPUT
-      $element.on \keyup, -> validate!
+      $element.on \keyup, -> 
+        if it.keyCode != 13 then validate!
       $element.on \change, -> validate!
-      $element.on \blur, -> validate!
 
   \x-drag : ($element, $scope, $expr) ->
 
