@@ -7,7 +7,7 @@ hasher.prepend-hash = \!
 hasher.init!
 
 open = ->
-   log 'router.open', it
+   #log 'router.open', it
    if browser.name is \safari or browser.name is \ios
       hasher.set-hash encodeURI it
    else
@@ -26,10 +26,10 @@ class RouteGroup
       @routes.push route
       return @
    dispose: ->
-      log 'disposing route group', @id
+      #log 'disposing route group', @id
       @routes |> each (r)!->
          if typeof r.dispose == \function
-            log 'removing route', r
+            #log 'removing route', r
             r.dispose()
 
 
@@ -40,12 +40,14 @@ module.exports =
    clear: ->
       router.remove-all-routes!
 
-   add: (routes, grpId=null) -> ##grpId may be string or int, defaults to random int
-      if !routes then throw 'No routes given'
-      if grpId and routeGroups[grpId] then throw 'RouteGroup with id "'+grpId+'" already exists'
-
-      group = new RouteGroup grpId
-      routeGroups[group.id] = group
+   add: (routes, grpId=null, appendIfGroupExists=false) -> ##grpId may be string or int, defaults to random int
+      if !routes then throw 'No routes to add given'
+      if grpId and routeGroups[grpId]
+         if !appendIfGroupExists then throw 'RouteGroup with id "'+grpId+'" already exists'
+         group = routeGroups[grpId]
+      else 
+         group = new RouteGroup grpId
+         routeGroups[group.id] = group
 
       routes |> Obj.keys |> each (path)~>
          if routes[path] instanceof Array
@@ -61,7 +63,7 @@ module.exports =
       current-hash = hasher.get-hash!
       router.reset-state!
       router.parse current-hash
-      log 'routeGroups', routeGroups
+      #log 'routeGroups', routeGroups
       return group.id
 
    remove: (grpId) !->
