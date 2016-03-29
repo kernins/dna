@@ -1,20 +1,18 @@
 crossroads = require \crossroads/dist/crossroads
 hasher = require \hasher
-{ any, keys, find, each, Obj } = require \prelude-ls
+{each, Obj} = require \prelude-ls
+
+
+router = crossroads.create! <<<< {greedy:no}
 
 ## hasher.raw = yes
-hasher.prepend-hash = \!
+hasher.prependHash = '!'
+hasher.changed.add !~> (router.parse it)
 hasher.init!
 
-open = ->
-   #log 'router.open', it
-   if browser.name is \safari or browser.name is \ios
-      hasher.set-hash encodeURI it
-   else
-      hasher.set-hash it
+lastRouted=null
+router.routed.add (request, info)!-> (lastRouted = {request, info})
 
-router = crossroads.create! <<<<
-   greedy:no
 
 routeGroups = {}
 class RouteGroup
@@ -28,19 +26,21 @@ class RouteGroup
    dispose: ->
       #log 'disposing route group', @id
       @routes |> each (r)!->
-         if typeof r.dispose == \function
+         if typeof(r.dispose)=='function'
             #log 'removing route', r
             r.dispose()
 
 
-hasher.changed.add ~>
-   router.parse it
 
 module.exports =
-   clear: ->
-      router.remove-all-routes!
+   getCurrentHash: ->
+      hasher.getHash!
 
-   add: (routes, grpId=null, appendIfGroupExists=false) -> ##grpId may be string or int, defaults to random int
+   getLastRouted: ->
+      lastRouted
+
+
+   add: (routes, grpId=null, appendIfGroupExists=false, doRoute=true) -> ##grpId may be string or int, defaults to random int
       if !routes then throw 'No routes to add given'
       if grpId and routeGroups[grpId]
          if !appendIfGroupExists then throw 'RouteGroup with id "'+grpId+'" already exists'
@@ -51,19 +51,17 @@ module.exports =
 
       routes |> Obj.keys |> each (path)~>
          if routes[path] instanceof Array
-            if typeof routes[path][0] isnt \function then throw 'Invalid route "'+path+'": handler must be a function'
+            if typeof(routes[path][0])!='function' then throw 'Invalid route "'+path+'": handler must be a function'
             r = routes[path][0]
             p = routes[path][1] or 0
          else 
-            if typeof routes[path] isnt \function then throw 'Invalid route "'+path+'": handler must be a function'
+            if typeof(routes[path])!='function' then throw 'Invalid route "'+path+'": handler must be a function'
             r = routes[path]
             p = 0
-         group.add(router.add-route ((path.char-at 0) is \^) && (new RegExp path) || path, r, p)
+         group.add(router.addRoute ((path.charAt 0)=='^') && (new RegExp path) || path, r, p)
 
-      current-hash = hasher.get-hash!
-      router.reset-state!
-      router.parse current-hash
       #log 'routeGroups', routeGroups
+      if doRoute then @route!
       return group.id
 
    remove: (grpId) !->
@@ -71,9 +69,25 @@ module.exports =
       routeGroups[grpId].dispose()
       delete routeGroups[grpId]
 
+   clear: !->
+      router.removeAllRoutes!
+
+
+   route: !->
+      router.resetState!
+      router.parse @getCurrentHash!
+
+
    default: (handler)!->
+      if typeof(handler)!='function' then throw 'DNA.Router.default(): invalid callback - function expected, '+typeof(handler)+' given'
       router.bypassed.add(handler)
 
+   onRouted: (handler)!->
+      if typeof(handler)!='function' then throw 'DNA.Router.onRouted(): invalid callback - function expected, '+typeof(handler)+' given'
+      router.routed.add(handler)
 
-   open: open
-  
+
+   open: !->
+      #log 'router.open', it
+      if (browser.name=='safari') || (browser.name=='ios') then hasher.setHash (encodeURI it)
+      else hasher.setHash it
