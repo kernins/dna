@@ -49,29 +49,40 @@ create-tag = ( tag-name, props = {} ) ->
             return
           
         props-scope = {} <<<< (props.scope or {})
-        
-        if props.isolated
-          @scope = new Scope (props.scope or {})
-        else
-          @scope = (Scope::$get @).$new props-scope
-          
-        @scope |> observed
 
-        if props.template
+        scope = null
+        scopeParent =
+          scope: undefined
+          get: ->
+            if @scope == undefined
+              try
+                @scope = Scope::$get self
+              catch
+                @scope = null
+            return @scope
+
+        isolated = props.isolated ? null
+        if (tmp=@data 'cmpIsolated') != undefined
+          if /^(?:0|no|false)$/i.test tmp then isolated=false
+          else if /^(?:1|yes|true)$/i.test tmp then isolated=true
+
+        if isolated then scope = new Scope (props.scope or {})
+        else scope = scopeParent.get!.$new props-scope
+        
+        if (tmp=@data 'cmpTemplate')
+          @template = (($scope, $scopeParent)-> eval tmp).apply window, [@scope, scopeParent.get!]
+        else if props.template
           @template = that
-        
-        if props.render?
-          @render = that
-        else
-          @render = (template = @template) ->
-                                  render-fn @, @scope, template
 
-        if props.controller
-          @controller = new that @, @scope
+        observed (@scope=scope) #assigning this.scope after tpl stuff to ensure correct scopeParent
+        
+        if props.render then @render = that
+        else @render = (template=@template)-> renderFn @, @scope, template
+
+        if props.controller then @controller = new that @, @scope
 
         @on \attached, ~>
-          if not @rendered
-            @render?!
+          if not @rendered then @render?!
           
         @on \rendered, ~>
           @rendered = yes
