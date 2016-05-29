@@ -47,8 +47,6 @@ create-tag = ( tag-name, props = {} ) ->
             that |> self.replace
             self = that
             return
-          
-        props-scope = {} <<<< (props.scope or {})
 
         scope = null
         scopeParent =
@@ -66,8 +64,9 @@ create-tag = ( tag-name, props = {} ) ->
           if /^(?:0|no|false)$/i.test tmp then isolated=false
           else if /^(?:1|yes|true)$/i.test tmp then isolated=true
 
-        if isolated then scope = new Scope (props.scope or {})
-        else scope = scopeParent.get!.$new props-scope
+        propsScope = {} <<< (props.scope or {})
+        if isolated || !scopeParent.get! then scope = new Scope propsScope
+        else scope = scopeParent.get!.$new propsScope
         
         if (tmp=@data 'cmpTemplate')
           @template = (($scope, $scopeParent)-> eval tmp).apply window, [@scope, scopeParent.get!]
