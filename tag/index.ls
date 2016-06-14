@@ -4,101 +4,89 @@
 # Register custom element with given controller and scope
 #
 
-{ find } = require \prelude-ls
+$ = require
+{find} = $ \prelude-ls
 
-observed = require \../observed
-attrs = require \../attrs
-Scope = require \../scope
+observed = $ \../observed
+attrs = $ \../attrs
+Scope = $ \../scope
 
-clean-element = (element) ->
-  if element?.tag-name
-    while element.first-child
-      element.remove-child element.first-child
 
-render-fn = ($element, $scope, $template = '', attributes = {}) ->
-  clean-element $element
 
-  $element.innerHTML = do ~>
-       | typeof! $template is \String   => $template
-       | typeof! $template is \Function => $scope |> $template
-       | _                              => ''
+cleanElement = (element)!->
+   if element?.tagName
+      while element.firstChild
+         element.removeChild element.firstChild
 
-  $element.rendered = yes
-  $element.emit \rendered
+renderFn = ($element, $scope, $template='', attributes={})!->
+   cleanElement $element
+
+   $element.innerHTML = switch typeof $template
+      case 'function' then $template $scope
+      case 'string' then $template
+      default throw new Error 'DNA.tag['+$element.tagName+']: invalid template: neither a function, nor a string'
+   
+   attrs $element, attributes
+   @rendered = true
+   $element.emit \rendered
+
+
 
 instances = []
+module.exports = (tagName, props={})->
+   if !tagName then throw new Error 'No tag name given'
 
-create-tag = ( tag-name, props = {} ) ->
+   document.registerElement tagName, do
+      prototype: Object.create HTMLElement::, do
+         createdCallback: value: ->
+            if (props.single || @id) && (instances |> find ~>(it.tagName==@tagName && it.id==@id))
+               @replace that
+               return
 
-  self = @
 
-  if not tag-name
-    throw new Error "No tag name given"
+            self = @
+            scope = null
+            scopeParent =  #caching parent scope getter, fetching PS only when factually requested
+               scope: undefined
+               get: ->
+                  if @scope == undefined
+                     try
+                        @scope = Scope::$get self
+                     catch
+                        @scope = null
+                  return @scope
 
-  document.register-element tag-name , do
-  
-    prototype: Object.create HTMLElement:: , do
-    
-      created-callback: value: ->
-        self = @
+            isolated = props.isolated ? null
+            if (tmp=@data 'cmpIsolated') != undefined
+               if /^(?:0|no|false)$/i.test tmp then isolated=false
+               else if /^(?:1|yes|true)$/i.test tmp then isolated=true
+
+            propsScope = {} <<< (props.scope || {})
+            if isolated || !scopeParent.get! then scope = new Scope propsScope
+            else scope = scopeParent.get!.$new propsScope
         
-        if props.single or @id
-          if (instances |> find -> it.tag-name == self.tag-name and it.id == self.id)
-            that |> self.replace
-            self = that
-            return
+            if (tmp=@data 'cmpTemplate') then @template = (($scope, $scopeParent)-> eval tmp).apply window, [@scope, scopeParent.get!]
+            else if props.template then @template = that
 
-        scope = null
-        scopeParent =
-          scope: undefined
-          get: ->
-            if @scope == undefined
-              try
-                @scope = Scope::$get self
-              catch
-                @scope = null
-            return @scope
-
-        isolated = props.isolated ? null
-        if (tmp=@data 'cmpIsolated') != undefined
-          if /^(?:0|no|false)$/i.test tmp then isolated=false
-          else if /^(?:1|yes|true)$/i.test tmp then isolated=true
-
-        propsScope = {} <<< (props.scope or {})
-        if isolated || !scopeParent.get! then scope = new Scope propsScope
-        else scope = scopeParent.get!.$new propsScope
+            observed (@scope=scope) #assigning this.scope after tpl stuff to ensure correct scopeParent
         
-        if (tmp=@data 'cmpTemplate')
-          @template = (($scope, $scopeParent)-> eval tmp).apply window, [@scope, scopeParent.get!]
-        else if props.template
-          @template = that
 
-        observed (@scope=scope) #assigning this.scope after tpl stuff to ensure correct scopeParent
+            if props.render then @render = that
+            else @render = (template=@template)-> renderFn @, @scope, template, props.attributes
+            if props.controller then @controller = new that @, @scope
+
+            @on \attached, !~> (if !@rendered then @render?!)
+
+            instances.push @
+            @emit \created
         
-        if props.render then @render = that
-        else @render = (template=@template)-> renderFn @, @scope, template
-
-        if props.controller then @controller = new that @, @scope
-
-        @on \attached, ~>
-          if not @rendered then @render?!
-          
-        @on \rendered, ~>
-          @rendered = yes
-          attrs @, (props.attributes or {})
-
-        instances.push @
-
-        @emit \created, it
-        
-      attached-callback: value: ->
-        @attached = yes
-        (@emit \attached, it)
+         attachedCallback: value: ->
+            @attached = true
+            @emit \attached
       
-      detached-callback: value: ->
-        @attached = no
-        (@emit \detached, it)
+         detachedCallback: value: ->
+            @attached = false
+            @emit \detached
       
-      attribute-changed-callback: value: (-> (@emit \attribute-changed, it))
-
-module.exports = create-tag
+         attributeChangedCallback: value: -> 
+            @emit \attribute-changed
