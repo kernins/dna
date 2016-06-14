@@ -30,6 +30,18 @@ renderFn = ($element, $scope, $template='', attributes={})!->
    @rendered = true
    $element.emit \rendered
 
+class ParentScopeGetter
+   (element)-> (@element=element)
+
+   scope: undefined
+   get: ->
+      if @scope == undefined
+         try
+            @scope = Scope::$get @element
+         catch
+            @scope = null
+      return @scope
+
 
 
 instances = []
@@ -44,17 +56,8 @@ module.exports = (tagName, props={})->
                return
 
 
-            self = @
             scope = null
-            scopeParent =  #caching parent scope getter, fetching PS only when factually requested
-               scope: undefined
-               get: ->
-                  if @scope == undefined
-                     try
-                        @scope = Scope::$get self
-                     catch
-                        @scope = null
-                  return @scope
+            scopeParent = new ParentScopeGetter @
 
             isolated = props.isolated ? null
             if (tmp=@data 'cmpIsolated') != undefined
@@ -64,9 +67,12 @@ module.exports = (tagName, props={})->
             propsScope = {} <<< (props.scope || {})
             if isolated || !scopeParent.get! then scope = new Scope propsScope
             else scope = scopeParent.get!.$new propsScope
-        
+
+            #TODO: remove $scope, rename $scopeParent to $scope? Probably no sense to pass component's own scope here
             if (tmp=@data 'cmpTemplate') then @template = (($scope, $scopeParent)-> eval tmp).apply window, [@scope, scopeParent.get!]
             else if props.template then @template = that
+
+            if (tmp=@data 'cmpViewOpts') then scope._viewOpts = (($scopeParent)-> eval '('+tmp+')').apply window, [scopeParent.get!]
 
             observed (@scope=scope) #assigning this.scope after tpl stuff to ensure correct scopeParent
         
