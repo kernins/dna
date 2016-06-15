@@ -27,7 +27,7 @@ renderFn = ($element, $scope, $template='', attributes={})!->
       default throw new Error 'DNA.tag['+$element.tagName+']: invalid template: neither a function, nor a string'
    
    attrs $element, attributes
-   @rendered = true
+   $element.rendered = true
    $element.emit \rendered
 
 class ParentScopeGetter
