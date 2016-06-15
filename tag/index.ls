@@ -30,6 +30,14 @@ renderFn = ($element, $scope, $template='', attributes={})!->
    $element.rendered = true
    $element.emit \rendered
 
+checkOverrideBool = (val, valOvr)->
+   if valOvr != undefined
+      if /^(?:0|no|false)$/i.test valOvr then val=false
+      else if /^(?:1|yes|true)$/i.test valOvr then val=true
+      else throw new Error 'DNA.tag: Invalid opt-bool override value: '+valOvr
+   return val
+
+
 class ParentScopeGetter
    (element)-> (@element=element)
 
@@ -59,10 +67,8 @@ module.exports = (tagName, props={})->
             scope = null
             scopeParent = new ParentScopeGetter @
 
-            isolated = props.isolated ? null
-            if (tmp=@data 'cmpIsolated') != undefined
-               if /^(?:0|no|false)$/i.test tmp then isolated=false
-               else if /^(?:1|yes|true)$/i.test tmp then isolated=true
+            isolated = checkOverrideBool (props.isolated ? null), (@data 'cmpIsolated')
+            forceRenderOnAttach = checkOverrideBool (props.forceRenderOnAttach ? null), (@data 'cmpForceRenderOnAttach')
 
             propsScope = {} <<< (props.scope || {})
             if isolated || !scopeParent.get! then scope = new Scope propsScope
@@ -81,7 +87,7 @@ module.exports = (tagName, props={})->
             else @render = (template=@template)-> renderFn @, @scope, template, props.attributes
             if props.controller then @controller = new that @, @scope
 
-            @on \attached, !~> (if !@rendered then @render?!)
+            @on \attached, !~> (if !@rendered || forceRenderOnAttach then @render?!)
 
             instances.push @
             @emit \created
