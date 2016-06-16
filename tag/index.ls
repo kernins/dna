@@ -19,8 +19,9 @@ cleanElement = (element)!->
          element.removeChild element.firstChild
 
 renderFn = ($element, $scope, $template='', attributes={})!->
-   cleanElement $element
+   cleanElement $element #TODO: is it really needed here?
 
+   #console.log 'rendering '+$element.tagName
    $element.innerHTML = switch typeof $template
       case 'function' then $template $scope
       case 'string' then $template
@@ -88,6 +89,7 @@ module.exports = (tagName, props={})->
             if props.controller then @controller = new that @, @scope
 
             @on \attached, !~> (if !@rendered || forceRenderOnAttach then @render?!)
+            if forceRenderOnAttach then @on \detached, !~> (cleanElement @) #to prevent old child elems from generating attach-detach ev seq (as @ is first attached with old content)
 
             instances.push @
             @emit \created
