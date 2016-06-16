@@ -79,7 +79,7 @@ module.exports = (tagName, props={})->
             if (tmp=@data 'cmpTemplate') then @template = (($scope, $scopeParent)-> eval tmp).apply window, [@scope, scopeParent.get!]
             else if props.template then @template = that
 
-            if (tmp=@data 'cmpViewOpts') then scope._viewOpts = (($scopeParent)-> eval '('+tmp+')').apply window, [scopeParent.get!]
+            scope._viewOpts = (tmp=@data 'cmpViewOpts') && ((($scopeParent)-> eval '('+tmp+')').apply window, [scopeParent.get!]) || {}
 
             observed (@scope=scope) #assigning this.scope after tpl stuff to ensure correct scopeParent
         
