@@ -70,6 +70,8 @@ module.exports = (tagName, props={})->
 
             isolated = checkOverrideBool (props.isolated ? null), (@data 'cmpIsolated')
             forceRenderOnAttach = checkOverrideBool (props.forceRenderOnAttach ? null), (@data 'cmpForceRenderOnAttach')
+            noRenderOnAttach = checkOverrideBool (props.noRenderOnAttach ? null), (@data 'cmpNoRenderOnAttach')
+            if forceRenderOnAttach && noRenderOnAttach then throw new Error 'forceRenderOnAttach and noRenderOnAttach options are mutually exclusive'
 
             propsScope = {} <<< (props.scope || {})
             if isolated || !scopeParent.get! then scope = new Scope propsScope
@@ -88,8 +90,9 @@ module.exports = (tagName, props={})->
             else @render = (template=@template)-> renderFn @, @scope, template, props.attributes
             if props.controller then @controller = new that @, @scope
 
-            @on \attached, !~> (if !@rendered || forceRenderOnAttach then @render?!)
-            if forceRenderOnAttach then @on \detached, !~> (cleanElement @) #to prevent old child elems from generating attach-detach ev seq (as @ is first attached with old content)
+            if !noRenderOnAttach
+               @on \attached, !~> (if !@rendered || forceRenderOnAttach then @render?!)
+               if forceRenderOnAttach then @on \detached, !~> (cleanElement @) #to prevent old child elems from generating attach-detach ev seq (as @ is first attached with old content)
 
             instances.push @
             @emit \created
