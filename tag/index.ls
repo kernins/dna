@@ -91,7 +91,13 @@ module.exports = (tagName, props={})->
             if props.controller then @controller = new that @, @scope
 
             if !noRenderOnAttach
-               @on \attached, !~> (if !@rendered || forceRenderOnAttach then @render?!)
+               @on \attached, !~> 
+                  if !@rendering && (!@rendered || forceRenderOnAttach)
+                     @rendering=true; res=@render?!
+                     if res instanceof Promise then res.then !~>(@rendering=false; @rendered=true)
+                     else
+                        @rendering = false
+                        @rendered = true
                if forceRenderOnAttach then @on \detached, !~> (cleanElement @) #to prevent old child elems from generating attach-detach ev seq (as @ is first attached with old content)
 
             instances.push @
