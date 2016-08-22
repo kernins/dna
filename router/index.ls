@@ -40,7 +40,7 @@ module.exports =
       lastRouted
 
 
-   add: (routes, grpId=null, appendIfGroupExists=false, doRoute=true) -> ##grpId may be string or int, defaults to random int
+   add: (routes, grpId=null, appendIfGroupExists=false, doRoute=false) -> ##grpId may be string or int, defaults to random int
       if !routes then throw 'No routes to add given'
       if grpId and routeGroups[grpId]
          if !appendIfGroupExists then throw 'RouteGroup with id "'+grpId+'" already exists'
