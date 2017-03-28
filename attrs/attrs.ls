@@ -50,53 +50,51 @@ render-fn = ($element, $scope, $template = '') ->
 module.exports = default-attrs =
 
   \x-click : ($element,$scope,$expr) ->
-    $element.on \click, ($event)->
-      $scope.$eval $expr
+    $element.on \click, (ev)->
+      $scope.$eval $expr, ('$event':ev)
 
   \x-hover : ($element,$scope,$expr) ->
-    $element.on \hover, ->
-      $scope.$eval $expr
+    $element.on \hover, (ev)->
+      $scope.$eval $expr, ('$event':ev)
 
   \x-focus : ($element,$scope,$expr) ->
-    $element.on \focus, ->
+    $element.on \focus, (ev)->
       set-timeout ->
-        $scope.$eval $expr
+        $scope.$eval $expr, ('$event':ev)
       , 300      
 
   \x-blur : ($element,$scope,$expr) ->
-    $element.on \blur, ->
+    $element.on \blur, (ev)->
       set-timeout ->
-        $scope.$eval $expr
+        $scope.$eval $expr, ('$event':ev)
       , 300
       
   \x-submit : ($element,$scope,$expr) ->
-    $element.on \submit, ->
+    $element.on \submit, (ev)->
       $element.elements |> each ->
-                        if it.tag-name?.to-lower-case! is \input
-                          it.emit \change
-      $scope.$eval $expr
-      it.prevent-default!
+        if it.tagName?.toLowerCase! is \input then it.emit \change
+      $scope.$eval $expr, ('$event':ev)
+      it.preventDefault!
 
   \x-keydown : ($element,$scope,$expr) ->
     $element.on \keydown, (ev) ->
-      $scope.$eval $expr, (\$event : ev)
+      $scope.$eval $expr, ('$event':ev)
         
   \x-keyup : ($element,$scope,$expr) ->
     $element.on \keyup, (ev) -> 
-      $scope.$eval $expr, (\$event : ev)
+      $scope.$eval $expr, ('$event':ev)
 
   \x-keyup-noenter : ($element,$scope,$expr) ->
     $element.on \keyup, (ev) ->
-      if ev.keyCode != 13 then $scope.$eval $expr, (\$event : ev)
+      if ev.keyCode != 13 then $scope.$eval $expr, ('$event':ev)
 
   \x-key-enter : ($element,$scope,$expr) ->
-    $element.on \keyup, ->
-      if it.key-code is 13 then $scope.$eval $expr
+    $element.on \keyup, (ev)->
+      if it.keyCode is 13 then $scope.$eval $expr, ('$event':ev)
 
   \x-select-fn : ($element, $scope, $expr) ->  #TODO think more about *-fn and parameters
-    $element.on 'select', ->
-      if typeof! (fn = $scope.$eval $expr) is \Function
-        fn ...
+    $element.on 'select', (ev)->
+      if typeof(fn = $scope.$eval $expr, ('$event':ev)) is \Function then fn ...
 
   \x-text : ($element, $scope, $expr) ->
     set = ->
