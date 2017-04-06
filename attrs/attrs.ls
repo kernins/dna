@@ -74,7 +74,7 @@ module.exports = default-attrs =
       $element.elements |> each ->
         if it.tagName?.toLowerCase! is \input then it.emit \change
       $scope.$eval $expr, ('$event':ev)
-      it.preventDefault!
+      ev.preventDefault!
 
   \x-keydown : ($element,$scope,$expr) ->
     $element.on \keydown, (ev) ->
@@ -90,7 +90,7 @@ module.exports = default-attrs =
 
   \x-key-enter : ($element,$scope,$expr) ->
     $element.on \keyup, (ev)->
-      if it.keyCode is 13 then $scope.$eval $expr, ('$event':ev)
+      if ev.keyCode is 13 then $scope.$eval $expr, ('$event':ev)
 
   \x-select-fn : ($element, $scope, $expr) ->  #TODO think more about *-fn and parameters
     $element.on 'select', (ev)->
