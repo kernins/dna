@@ -65,12 +65,16 @@ module.exports = (tagName, props={})->
                return
 
 
+            @getData = (name)-> #safari 10 fix (returns undef for data attrs containing json formatted string)
+               ((tmp=@data name)==undefined) && (@getAttribute ('data-'+(name.replace /([a-z])([A-Z])/g, '$1-$2').toLowerCase!)) || tmp
+
+
             scope = null
             scopeParent = new ParentScopeGetter @
 
-            isolated = checkOverrideBool (props.isolated ? null), (@data 'cmpIsolated')
-            forceRenderOnAttach = checkOverrideBool (props.forceRenderOnAttach ? null), (@data 'cmpForceRenderOnAttach')
-            noRenderOnAttach = checkOverrideBool (props.noRenderOnAttach ? null), (@data 'cmpNoRenderOnAttach')
+            isolated = checkOverrideBool (props.isolated ? null), (@getData 'cmpIsolated')
+            forceRenderOnAttach = checkOverrideBool (props.forceRenderOnAttach ? null), (@getData 'cmpForceRenderOnAttach')
+            noRenderOnAttach = checkOverrideBool (props.noRenderOnAttach ? null), (@getData 'cmpNoRenderOnAttach')
             if forceRenderOnAttach && noRenderOnAttach then throw new Error 'forceRenderOnAttach and noRenderOnAttach options are mutually exclusive'
 
             propsScope = {} <<< (props.scope || {})
@@ -78,10 +82,10 @@ module.exports = (tagName, props={})->
             else scope = scopeParent.get!.$new propsScope
 
             #TODO: remove $scope, rename $scopeParent to $scope? Probably no sense to pass component's own scope here
-            if (tmp=@data 'cmpTemplate') then @template = (($scope, $scopeParent)-> eval tmp).apply window, [@scope, scopeParent.get!]
+            if (tmp=@getData 'cmpTemplate') then @template = (($scope, $scopeParent)-> eval tmp).apply window, [@scope, scopeParent.get!]
             else if props.template then @template = that
 
-            scope._viewOpts = (tmp=@data 'cmpViewOpts') && ((($scopeParent)-> eval '('+tmp+')').apply window, [scopeParent.get!]) || {}
+            scope._viewOpts = (tmp=@getData 'cmpViewOpts') && ((($scopeParent)-> eval '('+tmp+')').apply window, [scopeParent.get!]) || {}
 
             observed (@scope=scope) #assigning this.scope after tpl stuff to ensure correct scopeParent
         
